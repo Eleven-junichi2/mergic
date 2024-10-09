@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "mergic"
+version = "0.1.0"
+description = "rpg game"
+authors = ["elprebit"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.12,<3.14"
+pygame = "^2.6.1"
+dearpygui = "^1.11.1"
+pyinstaller = "^6.10.0"
+
+[tool.poetry.group.dev.dependencies]
+pyinstaller = "^6.10.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
