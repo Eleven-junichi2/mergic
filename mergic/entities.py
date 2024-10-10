@@ -1,8 +1,9 @@
-from dataclasses import dataclass
 from pygame.math import Vector2
 
+from . import entityclass
 from .components import Surface
 
-@dataclass
+@entityclass
 class Player(Vector2, Surface):
     pass
+

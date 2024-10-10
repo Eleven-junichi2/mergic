@@ -1,7 +1,11 @@
 import os
-from typing import Any, Generator, Type
+from typing import Any, Generator, Tuple, Type
+from dataclasses import dataclass
+from functools import partial
 
 import pygame
+
+entityclass = partial(dataclass, slots=True)
 
 
 class AssetFinder:
@@ -18,9 +22,23 @@ class AssetFinder:
         return pygame.mixer.Sound(self.dict[name])
 
 
-class GameMap:
-    def __init__(self):
-        self.data = {}
+class GameMap[T]:
+    def __init__(self, width: int, height: int):
+        self.width = width
+        self.height = height
+        self.layers: dict[str, dict[Tuple[int, int], T]] = {}
+
+    def paint(self, layer: str, x: int, y: int, brush: T):
+        if x < 0 or y < 0 or x >= self.width or y >= self.height:
+            raise ValueError("Invalid coordinates")
+        self.layers.setdefault(layer, {})
+        self.layers[layer][(x, y)] = brush
+
+    def get_layer(self, layer_key: str):
+        return self.layers[layer_key]
+
+    # def export_as_2d_list(self) -> tuple[tuple[Any]]:
+    #     list2d = [_ for _ in ]
 
 
 class ECS:

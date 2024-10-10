@@ -1,12 +1,11 @@
-from typing import Optional
 from dataclasses import dataclass
 
 import pygame
 
+@dataclass
 class Hp:
-    def __init__(self, max: int, initial_hp: Optional[int] = None):
-        self.max = max
-        self.value = initial_hp if initial_hp else max
+    max_hp: int
+    hp: int = 0
 
 @dataclass
 class Surface:

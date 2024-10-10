@@ -13,18 +13,6 @@ def main():
     pygame.init()
 
     asset_finder = AssetFinder()
-    asset_finder.register(
-        "player",
-        Path(__file__).parent
-        / "assets"
-        / "imgs"
-        / "MiniWorldSprites"
-        / "Characters"
-        / "Soldiers"
-        / "Melee"
-        / "CyanMelee"
-        / "SwordsmanCyan.png",
-    )
 
     player = Player(asset_finder.load_img("player"))
 
