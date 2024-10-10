@@ -1,5 +1,5 @@
 import os
-from typing import Any, Generator, Tuple, Type
+from typing import Any, Generator, Type
 from dataclasses import dataclass
 from functools import partial
 
@@ -21,11 +21,17 @@ class AssetFinder:
     def load_sound(self, name) -> pygame.mixer.Sound:
         return pygame.mixer.Sound(self.dict[name])
 
+    def filepath(self, name) -> str | os.PathLike:
+        return self.dict[name]
+
+
 class ImageAtlas:
-    def __init__(self, image: pygame.Surface, atlases: dict[str, ((int, int), (int, int))]):
+    def __init__(
+        self, image: pygame.Surface, atlases: dict[str, ((int, int), (int, int))]
+    ):
         self.image = image
         self.atlases = atlases
-    
+
     def crop(self, atlas: str) -> pygame.Surface:
         if atlas not in self.atlases:
             raise ValueError("Invalid atlas name")
@@ -36,7 +42,7 @@ class GameMap[T]:
     def __init__(self, width: int, height: int):
         self.width = width
         self.height = height
-        self.layers: dict[str, dict[Tuple[int, int], T]] = {}
+        self.layers: dict[str, dict[(int, int), T]] = {}
 
     def paint(self, layer: str, x: int, y: int, brush: T):
         if x < 0 or y < 0 or x >= self.width or y >= self.height:
@@ -47,23 +53,18 @@ class GameMap[T]:
     def layer(self, layer_key: str):
         return self.layers[layer_key]
 
-    def import_layer(self, layer_key: str, layer_data: dict[Tuple[int, int], T]):
+    def import_layer(self, layer_key: str, layer_data: dict[(int, int), T]):
         self.layers[layer_key] = layer_data
-
-    # def export_as_2d_list(self) -> tuple[tuple[Any]]:
-    #     list2d = [_ for _ in ]
 
 
 class ECS:
     def __init__(self):
         self.entities: dict[type, list[object]] = {}
-        # self.entity_components: dict[type, tuple[object]] = {}
         self.dead_entity_buffer: list[object] = []
         self.maps: dict[str, GameMap] = {}
 
     def add(self, entity: object):
         self.entities.setdefault(entity.__class__, [])
-        # self.entity_components.setdefault(entity.__class__, entity.__class__.__mro__)
         self.entities[entity.__class__].append(entity)
 
     def delete_now(self, entity):
@@ -93,8 +94,7 @@ class GameWorld(ECS):
         super().__init__()
         self.maps: dict[str, GameMap] = {}
 
-    
-    def gamemap(self, map_name) -> GameMap:\
+    def gamemap(self, map_name) -> GameMap:
         return self.maps.get(map_name)
 
     def set_gamemap(self, map_name, gamemap: GameMap):

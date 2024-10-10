@@ -1,14 +1,26 @@
 # TODO: make tests
 from pathlib import Path
+import tomllib
+import json
 
 import pygame
 
 from . import GameWorld, AssetFinder, GameMap, ImageAtlas
-from .entities import Player
+
 
 FPS = 60
 
 ASSETS_DIR = Path(__file__).parent / "assets"
+
+
+def load_config():
+    with open(Path(__file__).parent / "config.toml", "r") as f:
+        return tomllib.load(f)
+
+
+def load_localized_texts(language_code="en"):
+    with open(Path(__file__).parent / "i18n" / f"{language_code}.json", "r") as f:
+        return json.load(f)
 
 
 def main():
