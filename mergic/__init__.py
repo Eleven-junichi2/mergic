@@ -37,6 +37,9 @@ class GameMap[T]:
     def get_layer(self, layer_key: str):
         return self.layers[layer_key]
 
+    def import_layer(self, layer_key: str, layer_data: dict[Tuple[int, int], T]):
+        self.layers[layer_key] = layer_data
+
     # def export_as_2d_list(self) -> tuple[tuple[Any]]:
     #     list2d = [_ for _ in ]
 

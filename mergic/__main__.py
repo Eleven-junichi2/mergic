@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pygame
 
-from . import GameWorld, AssetFinder
+from . import GameWorld, AssetFinder, GameMap
 from .entities import Player
 
 FPS = 60
@@ -14,10 +14,13 @@ def main():
 
     asset_finder = AssetFinder()
 
-    player = Player(asset_finder.load_img("player"))
-
     world = GameWorld()
-    world.add(player)
+    world.set_gamemap("departure", GameMap(16, 16))
+    world.maps["departure"].import_layer("ground", {(0, 0): 1, (4, 4): 1})
+    for y in range(0, world.maps["departure"].height):
+        for x in range(0, world.maps["departure"].width):
+            print(world.maps["departure"].get_layer("ground").get((x, y), 0), end="")
+        print()
 
     clock = pygame.time.Clock()
     display = pygame.display.set_mode((640, 360))
