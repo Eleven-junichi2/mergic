@@ -72,8 +72,8 @@ class TestGameMap(unittest.TestCase):
         gamemap = GameMap(3, 3)
         gamemap.paint("example", 0, 0, 0)
         gamemap.paint("example", 2, 2, 1)
-        self.assertEqual(gamemap.get_layer("example")[0, 0], 0)
-        self.assertEqual(gamemap.get_layer("example")[2, 2], 1)
+        self.assertEqual(gamemap.layer("example")[0, 0], 0)
+        self.assertEqual(gamemap.layer("example")[2, 2], 1)
 
     def test_painting_map_with_invalid_xy(self):
         gamemap = GameMap(3, 3)
@@ -83,12 +83,14 @@ class TestGameMap(unittest.TestCase):
     def test_gamemap_example_usage(self):
         world = GameWorld()
         world.set_gamemap("departure", GameMap(5, 5))
-        world.maps["departure"].import_layer("ground", {(0, 0): 1, (4, 4): 1})
+        world.gamemap("departure").import_layer("ground", {(0, 0): 1, (4, 4): 1})
         list2d: list[list[int]] = []
-        for y in range(0, world.maps["departure"].height):
+        for y in range(0, world.gamemap("departure").height):
             list2d.append([])
-            for x in range(0, world.maps["departure"].width):
-                list2d[y].append(world.maps["departure"].get_layer("ground").get((x, y), 0))
+            for x in range(0, world.gamemap("departure").width):
+                list2d[y].append(
+                    world.gamemap("departure").layer("ground").get((x, y), 0)
+                )
 
         self.assertEqual(
             list2d,

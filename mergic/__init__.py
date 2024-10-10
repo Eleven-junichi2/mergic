@@ -21,6 +21,16 @@ class AssetFinder:
     def load_sound(self, name) -> pygame.mixer.Sound:
         return pygame.mixer.Sound(self.dict[name])
 
+class ImageAtlas:
+    def __init__(self, image: pygame.Surface, atlases: dict[str, ((int, int), (int, int))]):
+        self.image = image
+        self.atlases = atlases
+    
+    def crop(self, atlas: str) -> pygame.Surface:
+        if atlas not in self.atlases:
+            raise ValueError("Invalid atlas name")
+        return self.image.subsurface(self.atlases[atlas][0], self.atlases[atlas][1])
+
 
 class GameMap[T]:
     def __init__(self, width: int, height: int):
@@ -34,7 +44,7 @@ class GameMap[T]:
         self.layers.setdefault(layer, {})
         self.layers[layer][(x, y)] = brush
 
-    def get_layer(self, layer_key: str):
+    def layer(self, layer_key: str):
         return self.layers[layer_key]
 
     def import_layer(self, layer_key: str, layer_data: dict[Tuple[int, int], T]):
@@ -83,5 +93,9 @@ class GameWorld(ECS):
         super().__init__()
         self.maps: dict[str, GameMap] = {}
 
-    def set_gamemap(self, key, gamemap: GameMap):
-        self.maps[key] = gamemap
+    
+    def gamemap(self, map_name) -> GameMap:\
+        return self.maps.get(map_name)
+
+    def set_gamemap(self, map_name, gamemap: GameMap):
+        self.maps[map_name] = gamemap
