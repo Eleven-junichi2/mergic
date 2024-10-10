@@ -1,5 +1,5 @@
 import os
-from typing import Any, Generator
+from typing import Any, Generator, Type
 
 import pygame
 
@@ -46,7 +46,7 @@ class ECS:
             self.delete_now(entity)
         self.dead_entity_buffer.clear()
 
-    def entities_for_type[T](self, entity_type: T) -> Generator[T, Any, None]:
+    def entities_for_type[T](self, entity_type: Type[T]) -> Generator[T, Any, None]:
         yield from self.entities[entity_type]
 
     def entities_for_components(self, *component_types: type):
