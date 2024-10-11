@@ -32,7 +32,7 @@ def main():
         asset_finder.load_img("grass"),
         {"water": ((0, 0), (16, 16)), "grass": ((16, 0), (16, 16))},
     )
-    tile_to_surface = {"grass": tileset.crop("grass"), "water": tileset.crop("water")}
+    tiletype_to_surface = {"grass": tileset.crop("grass"), "water": tileset.crop("water")}
 
     world = GameWorld()
     world.set_gamemap("departure", GameMap(16, 16))
@@ -52,7 +52,7 @@ def main():
         for y in range(0, world.gamemap("departure").height):
             for x in range(0, world.gamemap("departure").width):
                 display.blit(
-                    tile_to_surface[
+                    tiletype_to_surface[
                         world.gamemap("departure").layer("ground").get((x, y), "water")
                     ],
                     (x * 16, y * 16),

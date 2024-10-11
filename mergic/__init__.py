@@ -38,13 +38,13 @@ class ImageAtlas:
         return self.image.subsurface(self.atlases[atlas][0], self.atlases[atlas][1])
 
 
-class GameMap[T]:
+class GameMap:
     def __init__(self, width: int, height: int):
         self.width = width
         self.height = height
-        self.layers: dict[str, dict[(int, int), T]] = {}
+        self.layers: dict[str, dict[(int, int), ]] = {}
 
-    def paint(self, layer: str, x: int, y: int, brush: T):
+    def paint[T](self, layer: str, x: int, y: int, brush: T):
         if x < 0 or y < 0 or x >= self.width or y >= self.height:
             raise ValueError("Invalid coordinates")
         self.layers.setdefault(layer, {})
@@ -53,7 +53,7 @@ class GameMap[T]:
     def layer(self, layer_key: str):
         return self.layers[layer_key]
 
-    def import_layer(self, layer_key: str, layer_data: dict[(int, int), T]):
+    def import_layer[T](self, layer_key: str, layer_data: dict[(int, int), T]):
         self.layers[layer_key] = layer_data
 
 
