@@ -72,24 +72,30 @@ class TestGameMap(unittest.TestCase):
         gamemap = GameMap(3, 3)
         gamemap.paint("example", 0, 0, 0)
         gamemap.paint("example", 2, 2, 1)
-        self.assertEqual(gamemap.layer("example")[0, 0], 0)
-        self.assertEqual(gamemap.layer("example")[2, 2], 1)
+        self.assertEqual(gamemap.layer("example")["0,0"], 0)
+        self.assertEqual(gamemap.layer("example")["2,2"], 1)
 
     def test_painting_map_with_invalid_xy(self):
         gamemap = GameMap(3, 3)
         with self.assertRaises(ValueError):
             gamemap.paint("example", 3, 0, 0)
+    
+    def test_gamemap_coords_for_elements(self):
+        gamemap = GameMap(6, 6)
+        gamemap.import_layer("ground", {"0,0": 1, "4,4": 1})
+        for x, y in gamemap.coordinates_of_elements("ground"):
+            pass
 
     def test_gamemap_example_usage(self):
         world = GameWorld()
         world.set_gamemap("departure", GameMap(5, 5))
-        world.gamemap("departure").import_layer("ground", {(0, 0): 1, (4, 4): 1})
+        world.gamemap("departure").import_layer("ground", {"0,0": 1, "4,4": 1})
         list2d: list[list[int]] = []
         for y in range(0, world.gamemap("departure").height):
             list2d.append([])
             for x in range(0, world.gamemap("departure").width):
                 list2d[y].append(
-                    world.gamemap("departure").layer("ground").get((x, y), 0)
+                    world.gamemap("departure").layer("ground").get(f"{x},{y}", 0)
                 )
 
         self.assertEqual(

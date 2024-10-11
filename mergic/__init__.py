@@ -1,6 +1,6 @@
 import os
-from typing import Any, Generator, Type
-from dataclasses import dataclass
+from typing import Any, Generator, Tuple, Type
+from dataclasses import dataclass, field
 from functools import partial
 
 import pygame
@@ -27,33 +27,47 @@ class AssetFinder:
 
 class ImageAtlas:
     def __init__(
-        self, image: pygame.Surface, atlases: dict[str, ((int, int), (int, int))]
+        self,
+        image: pygame.Surface,
+        atlases: dict[str, Tuple[Tuple[int, int], Tuple[int, int]]],
     ):
         self.image = image
         self.atlases = atlases
 
-    def crop(self, atlas: str) -> pygame.Surface:
-        if atlas not in self.atlases:
+    def crop(self, atlas_name: str) -> pygame.Surface:
+        if atlas_name not in self.atlases:
             raise ValueError("Invalid atlas name")
-        return self.image.subsurface(self.atlases[atlas][0], self.atlases[atlas][1])
+        return self.image.subsurface(
+            self.atlases[atlas_name][0], self.atlases[atlas_name][1]
+        )
+
+    def name_to_surf_dict(self) -> dict[str, pygame.Surface]:
+        return {atlas_name: self.crop(atlas_name) for atlas_name in self.atlases.keys()}
 
 
-class GameMap:
-    def __init__(self, width: int, height: int):
-        self.width = width
-        self.height = height
-        self.layers: dict[str, dict[(int, int), ]] = {}
+@dataclass
+class GameMap[T]:
+    # TODO: json serialization
+    width: int
+    height: int
+    layers: dict[str, dict[str, T]] = field(default_factory=dict)
 
-    def paint[T](self, layer: str, x: int, y: int, brush: T):
+    def paint(self, layer: str, x: int, y: int, brush: T):
         if x < 0 or y < 0 or x >= self.width or y >= self.height:
             raise ValueError("Invalid coordinates")
         self.layers.setdefault(layer, {})
-        self.layers[layer][(x, y)] = brush
+        self.layers[layer][f"{x},{y}"] = brush
+    
+    def fetch_by_xy(self, x: int, y: int, layer: str) -> T:
+        return self.layers[layer][f"{x},{y}"]
+
+    def coordinates_of_elements(self, layer: str):
+        yield from [[int(_) for _ in coordinate_str.split(",")] for coordinate_str in self.layers[layer].keys()]
 
     def layer(self, layer_key: str):
         return self.layers[layer_key]
 
-    def import_layer[T](self, layer_key: str, layer_data: dict[(int, int), T]):
+    def import_layer[T](self, layer_key: str, layer_data: dict[str, T]):
         self.layers[layer_key] = layer_data
 
 
