@@ -92,6 +92,12 @@ class GameMapEditor:
         self.gamemap_buffer.import_layer(layer_name, {})
         if func := self.on_mutate_layers_via_editor:
             func()
+    
+    def delete_layer(self, layer_name: str):
+        if layer_name in self.gamemap_buffer.layers:
+            del self.gamemap_buffer.layers[layer_name]
+        if func := self.on_mutate_layers_via_editor:
+            func()
 
     def import_gamemap_from_file(self, filepath: str | os.PathLike):
         with open(filepath, "r") as f:
@@ -301,6 +307,9 @@ class App:
     def on_btn_add_layer(self):
         self.gamemap_editor.add_new_layer(self.layer_name_input_var.get())
 
+    def on_btn_delete_layer(self):
+        self.gamemap_editor.delete_layer(self.layer_name_input_var.get())
+
     def setup(self):
         menubar = tk.Menu(self.root)
         self.root.configure(menu=menubar)
@@ -358,7 +367,9 @@ class App:
             text="Add",
             command=self.on_btn_add_layer,
         )
-        btn_delete_layer = tk.Button(layer_editor_frame, text="Delete")
+        btn_delete_layer = tk.Button(
+            layer_editor_frame, text="Delete", command=self.on_btn_delete_layer
+        )
         btn_add_layer.pack(side=tk.LEFT)
         btn_rename_layer.pack(side=tk.LEFT)
         btns_to_edit_layer_name_frame.pack()
