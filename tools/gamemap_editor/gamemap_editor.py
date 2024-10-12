@@ -73,16 +73,24 @@ class GameMapEditor:
         self,
         gamemap: Optional[GameMap] = None,
         on_mutate_layers_via_editor: Optional[Callable] = None,
+        on_import_gamemap_via_editor: Optional[Callable] = None,
     ):
         self.gamemap_buffer: Optional[GameMap] = gamemap
         self.on_mutate_layers_via_editor: Optional[Callable] = (
             on_mutate_layers_via_editor
         )
+        self.on_import_gamemap_via_editor: Optional[Callable] = (
+            on_import_gamemap_via_editor
+        )
         self.__current_layer_selection: Optional[str] = None
+
+    def reset_gamemap(self, *gamemap_init_args, **gamemap_init_kwargs):
+        self.gamemap_buffer = GameMap(*gamemap_init_args, **gamemap_init_kwargs)
+        self.on_mutate_layers_via_editor
 
     def add_new_layer(self, layer_name):
         self.gamemap_buffer.import_layer(layer_name, {})
-        if func:= self.on_mutate_layers_via_editor:
+        if func := self.on_mutate_layers_via_editor:
             func()
 
     def import_gamemap_from_file(self, filepath: str | os.PathLike):
@@ -91,9 +99,11 @@ class GameMapEditor:
             self.gamemap_buffer = GameMap(
                 gamemap["width"], gamemap["height"], layers=gamemap["layers"]
             )
+        self.select_layer(None)
         if func := self.on_mutate_layers_via_editor:
             func()
-            
+        if func := self.on_import_gamemap_via_editor:
+            func()
 
     def save_gamemap_as_file(self, filepath: str | os.PathLike):
         with open(filepath, "w") as f:
@@ -102,7 +112,7 @@ class GameMapEditor:
     def display_layerlist(self):
         return list(self.gamemap_buffer.layers.keys())
 
-    def select_layer(self, layer: str):
+    def select_layer(self, layer: str | None):
         self.__current_layer_selection = layer
 
     def current_layer_selection(self) -> str:
@@ -133,7 +143,12 @@ class App:
         self.root = tk.Tk()
         self.root.title("Mergic GameMap Editor")
         self.root.geometry("640x540")
-        self.gamemap_editor: GameMapEditor = None
+        self.gamemap_editor: GameMapEditor = GameMapEditor(
+            None,
+            on_mutate_layers_via_editor=lambda: self.layerlist_buffer.set(
+                self.gamemap_editor.display_layerlist()
+            ),
+        )
         self.mapeditor_canvasimage_buffer = None
         self.mapeditor_tileselector_canvasobject_ids = deque()
         self.mapeditor_gamemapimage_canvasobject_ids = deque()
@@ -142,21 +157,13 @@ class App:
         self.current_brush: Optional[str] = None
         self.layer_name_input_var = tk.StringVar()
         self.layerlist_buffer = tk.StringVar()
-
-    def reset_gamemap_editor(self, gamemap: Optional[GameMap] =None):
-        self.gamemap_editor = GameMapEditor(
-            gamemap=gamemap,
-            on_mutate_layers_via_editor=lambda: self.layerlist_buffer.set(
-                self.gamemap_editor.display_layerlist()
-            )
-        )
+        self.display_gamemap_pos_for_mouse_pos_var = tk.StringVar()
 
     def dialog_openfile(self):
         filepath = filedialog.askopenfilename(
             defaultextension=".json", filetypes=[("GameMap(.json)", "*.json")]
         )
         if filepath:
-            self.reset_gamemap_editor()
             self.gamemap_editor.import_gamemap_from_file(filepath)
 
     def dialog_savefile(self):
@@ -164,7 +171,7 @@ class App:
             defaultextension=".json", filetypes=[("GameMap(.json)", "*.json")]
         )
         if filepath:
-            self.gamemap_editor.save_gamemap_as_file()
+            self.gamemap_editor.save_gamemap_as_file(filepath)
 
     def on_select_layer(self, event: tk.Event, canvas: tk.Canvas):
         listbox: tk.Listbox = event.widget
@@ -206,6 +213,16 @@ class App:
         canvas: tk.Canvas = event.widget
         self.paint_tile_on_canvas_with_mouse(canvas, event.x, event.y)
 
+    def on_mouse_with_left_clicking_in_canvas(self, event: tk.Event):
+        canvas: tk.Canvas = event.widget
+        self.paint_tile_on_canvas_with_mouse(canvas, event.x, event.y)
+        self.render_tile_selector(canvas, event.x, event.y)
+
+    def on_mouse_with_right_clicking_in_canvas(self, event: tk.Event):
+        canvas: tk.Canvas = event.widget
+        self.erase_tile_on_canvas_with_mouse(canvas, event.x, event.y)
+        self.render_tile_selector(canvas, event.x, event.y)
+
     def on_rightclick_canvas(self, event: tk.Event):
         canvas: tk.Canvas = event.widget
         self.erase_tile_on_canvas_with_mouse(canvas, event.x, event.y)
@@ -214,6 +231,8 @@ class App:
         self, canvas: tk.Canvas, mouse_x: int, mouse_y: int
     ):
         if self.current_brush is None:
+            return
+        if self.gamemap_editor is None:
             return
         tile_x = canvas.canvasx(mouse_x) // config.tile_width
         tile_y = canvas.canvasy(mouse_y) // config.tile_height
@@ -229,6 +248,8 @@ class App:
     def erase_tile_on_canvas_with_mouse(
         self, canvas: tk.Canvas, mouse_x: int, mouse_y: int
     ):
+        if self.gamemap_editor is None:
+            return
         tile_x = canvas.canvasx(mouse_x) // config.tile_width
         tile_y = canvas.canvasy(mouse_y) // config.tile_height
         if layer_key := self.gamemap_editor.current_layer_selection():
@@ -242,7 +263,9 @@ class App:
         self.mapeditor_tileselector_canvasobject_ids.clear()
         tile_x = canvas.canvasx(mouse_x) // config.tile_width
         tile_y = canvas.canvasy(mouse_y) // config.tile_height
-        # print(f"x={tile_x},y={tile_y}")
+        self.display_gamemap_pos_for_mouse_pos_var.set(
+            f"(tile: x={tile_x},y={tile_y}) (mouse: x={mouse_x},y={mouse_y})"
+        )
         id = canvas.create_rectangle(
             tile_x * config.tile_width,
             tile_y * config.tile_height,
@@ -273,8 +296,7 @@ class App:
         height = simpledialog.askinteger(None, "tile height", initialvalue=9)
         if height is None:
             return
-        self.reset_gamemap_editor(GameMap(width=width, height=height))
-        self.gamemap_editor.on_mutate_layers_via_editor()
+        self.gamemap_editor.reset_gamemap(width=width, height=height)
 
     def on_btn_add_layer(self):
         self.gamemap_editor.add_new_layer(self.layer_name_input_var.get())
@@ -315,15 +337,17 @@ class App:
         # prepare mapeditor canvas
         map_editor_frame = tk.Frame(self.root, bd=1)
         map_editor_canvas = tk.Canvas(map_editor_frame)
+        self.gamemap_editor.on_import_gamemap_via_editor = (
+            lambda: map_editor_canvas.delete(
+                *self.mapeditor_gamemapimage_canvasobject_ids
+            )
+        )
         # --
 
         layer_list.bind(
             "<<ListboxSelect>>",
             lambda event: self.on_select_layer(event, map_editor_canvas),
         )
-        # self.gamemap_editor.on_import_gamemap = lambda gamemap: layerlist_buffer.set(
-        #     self.gamemap_editor.display_layerlist()
-        # )
         btns_to_edit_layer_name_frame = tk.Frame(layer_editor_frame)
         btn_rename_layer = tk.Button(btns_to_edit_layer_name_frame, text="Rename")
         entry_layer_name = tk.Entry(
@@ -349,18 +373,30 @@ class App:
 
         map_editor_canvas.bind("<Motion>", self.on_mouse_in_canvas)
         map_editor_canvas.bind("<Button-1>", self.on_leftclick_canvas)
+        map_editor_canvas.bind(
+            "<B1-Motion>", self.on_mouse_with_left_clicking_in_canvas
+        )
         map_editor_canvas.bind("<Button-3>", self.on_rightclick_canvas)
+        map_editor_canvas.bind(
+            "<B3-Motion>", self.on_mouse_with_right_clicking_in_canvas
+        )
         vertical_scrollbar = tk.Scrollbar(
             map_editor_canvas, orient=tk.VERTICAL, command=map_editor_canvas.yview
         )
         horizontal_scrollbar = tk.Scrollbar(
             map_editor_canvas, orient=tk.HORIZONTAL, command=map_editor_canvas.xview
         )
-        map_editor_canvas.configure(scrollregion=(0, 0, 900, 900))
+        map_editor_canvas.configure(
+            scrollregion=(0, 0, 900, 900)
+        )  # TODO: Fix scrollregion to reflect the size of the gamemap.
         map_editor_canvas.configure(yscrollcommand=vertical_scrollbar.set)
         map_editor_canvas.configure(xscrollcommand=horizontal_scrollbar.set)
         vertical_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
         horizontal_scrollbar.pack(side=tk.BOTTOM, fill=tk.X)
+        display_gamemap_pos_for_mouse_pos = tk.Label(
+            textvariable=self.display_gamemap_pos_for_mouse_pos_var
+        )
+        display_gamemap_pos_for_mouse_pos.pack()
         map_editor_canvas.pack(fill=tk.BOTH, expand=True)
         map_editor_frame.pack(side=tk.RIGHT)
 
