@@ -33,6 +33,10 @@ class ImageAtlas:
     ):
         self.image = image
         self.atlases = atlases
+    
+    @staticmethod
+    def tile_atlases(self, tile_height, tile_width, row_count, column_count, how_many_tiles):
+        raise NotImplementedError
 
     def crop(self, atlas_name: str) -> pygame.Surface:
         if atlas_name not in self.atlases:
@@ -53,12 +57,28 @@ class GameMap[T]:
     layers: dict[str, dict[str, T]] = field(default_factory=dict)
 
     def paint(self, layer: str, x: int, y: int, brush: T):
+        if not isinstance(x, int) or not isinstance(y, int):
+            raise ValueError("Coordinates must be integer values")
         if x < 0 or y < 0 or x >= self.width or y >= self.height:
             raise ValueError("Invalid coordinates")
         self.layers.setdefault(layer, {})
         self.layers[layer][f"{x},{y}"] = brush
     
-    def fetch_by_xy(self, x: int, y: int, layer: str) -> T:
+    def erase_at(self, layer: str, x: int, y: int, raise_error_on_missing: bool = True):
+        if not isinstance(x, int) or not isinstance(y, int):
+            raise ValueError("Coordinates must be integer values")
+        if x < 0 or y < 0 or x >= self.width or y >= self.height:
+            raise ValueError("Invalid coordinates")
+        try:
+            del self.layers[layer][f"{x},{y}"]
+        except KeyError:
+            if raise_error_on_missing:
+                raise ValueError(f"no element at ({x},{y})")
+        
+        # if layer in self.layers and f"{x},{y}" in self.layers[layer]:
+        #     del self.layers[layer][f"{x},{y}"]
+    
+    def fetch_by_xy(self, x: int, y: int, layer: str):
         return self.layers[layer][f"{x},{y}"]
 
     def coordinates_of_elements(self, layer: str):

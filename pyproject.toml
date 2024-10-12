@@ -11,6 +11,7 @@ python = ">=3.12,<3.14"
 pygame = "^2.6.1"
 dearpygui = "^1.11.1"
 pyinstaller = "^6.10.0"
+pillow = "^10.4.0"
 
 [tool.poetry.group.dev.dependencies]
 pyinstaller = "^6.10.0"

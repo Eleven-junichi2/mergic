@@ -1,0 +1,14 @@
+{
+    "grass": {
+        "tileset": "Grass",
+        "atlas": "grass"
+    },
+    "water": {
+        "tileset": "Grass",
+        "atlas": "water"
+    },
+    "texturedgrass": {
+        "tileset": "TexturedGrass",
+        "atlas": "texturedgrass"
+    }
+}
