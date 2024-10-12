@@ -1,5 +1,5 @@
 import os
-from typing import Any, Generator, Tuple, Type
+from typing import Any, Generator, Optional, Tuple, Type
 from dataclasses import dataclass, field
 from functools import partial
 
@@ -133,3 +133,44 @@ class GameWorld(ECS):
 
     def set_gamemap(self, map_name, gamemap: GameMap):
         self.maps[map_name] = gamemap
+
+@dataclass
+class Scene:
+    screen: pygame.surface.Surface
+    manager: Optional["SceneManager"] = None
+
+    def setup(self):
+        pass
+
+    def cleanup(self):
+        pass
+
+    def handle_event(self, event: pygame.event.Event):
+        pass
+    
+    def update(self, dt):
+        pass
+
+    def change_scene(self, next_scene_name: str):
+        self.manager.change_scene(next_scene_name)
+
+class SceneManager:
+    def __init__(self):
+        self.current_scene: Optional[str] = None
+        self.scenes: dict[str, Scene] = {}
+    
+    def add(self, scene: Scene, scene_name=str):
+        if len(self.scenes) == 0:
+            self.current_scene = scene_name
+        self.scenes[scene_name] = scene
+    
+    def change_scene(self, next_scene_name: str):
+        self.scenes[self.current_scene].cleanup()
+        self.current_scene = next_scene_name
+        self.scenes[self.current_scene].setup()
+    
+    def handle_event(self, event: pygame.event.Event):
+        self.scenes[self.current_scene].handle_event(event)
+    
+    def update(self, dt):
+        self.scenes[self.current_scene].update(dt)
