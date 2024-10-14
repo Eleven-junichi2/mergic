@@ -14,7 +14,7 @@ py -m mergic
 
 ```ps1
 # (from project's root directory)
-python .\tools\gamemap_editor\gamemap_editor.py
+python .\tools\gamemap_editor\launcher.py
 # or
 python .\tools\gamemap_editor\gamemap_editor_prototype.py
 ```

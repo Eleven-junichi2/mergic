@@ -174,3 +174,4 @@ class SceneManager:
     
     def update(self, dt):
         self.scenes[self.current_scene].update(dt)
+        print("scene: ", self.current_scene)
