@@ -34,9 +34,11 @@ class ImageAtlas:
     ):
         self.image = image
         self.atlases = atlases
-    
+
     @staticmethod
-    def tile_atlases(self, tile_height, tile_width, row_count, column_count, how_many_tiles):
+    def tile_atlases(
+        self, tile_height, tile_width, row_count, column_count, how_many_tiles
+    ):
         raise NotImplementedError
 
     def crop(self, atlas_name: str) -> pygame.Surface:
@@ -64,7 +66,7 @@ class GameMap[T]:
             raise ValueError("Invalid coordinates")
         self.layers.setdefault(layer, {})
         self.layers[layer][f"{x},{y}"] = brush
-    
+
     def erase_at(self, layer: str, x: int, y: int, raise_error_on_missing: bool = True):
         if not isinstance(x, int) or not isinstance(y, int):
             raise ValueError("Coordinates must be integer values")
@@ -75,15 +77,15 @@ class GameMap[T]:
         except KeyError:
             if raise_error_on_missing:
                 raise ValueError(f"no element at ({x},{y})")
-        
-        # if layer in self.layers and f"{x},{y}" in self.layers[layer]:
-        #     del self.layers[layer][f"{x},{y}"]
-    
+
     def fetch_by_xy(self, x: int, y: int, layer: str):
         return self.layers[layer][f"{x},{y}"]
 
     def coordinates_of_elements(self, layer: str):
-        yield from [[int(_) for _ in coordinate_str.split(",")] for coordinate_str in self.layers[layer].keys()]
+        yield from [
+            [int(_) for _ in coordinate_str.split(",")]
+            for coordinate_str in self.layers[layer].keys()
+        ]
 
     def layer(self, layer_key: str):
         return self.layers[layer_key]
@@ -135,6 +137,7 @@ class GameWorld(ECS):
     def set_gamemap(self, map_name, gamemap: GameMap):
         self.maps[map_name] = gamemap
 
+
 @dataclass
 class Scene:
     screen: pygame.surface.Surface
@@ -143,11 +146,16 @@ class Scene:
     @staticmethod
     def print_clockinfo(fn: Callable, measurement_times=3):
         fps_history = deque()
+
         def wrapper(self, dt):
             fps_history.append(1 / (dt / 1000) if dt != 0 else 0)
-            print(f"delta time: {dt}, FPS(Average over {measurement_times} measurements): {sum(fps_history) / len(fps_history)}")
+            fn(self, dt)
+            print(
+                f"delta time: {dt}, FPS(Average over {measurement_times} measurements): {sum(fps_history) / len(fps_history)}"
+            )
             if len(fps_history) > measurement_times:
                 fps_history.popleft()
+
         return wrapper
 
     def setup(self):
@@ -158,33 +166,34 @@ class Scene:
 
     def handle_event(self, event: pygame.event.Event):
         pass
-    
+
     def update(self, dt):
         pass
 
     def change_scene(self, next_scene_name: str):
         self.manager.change_scene(next_scene_name)
 
+
 class SceneManager:
     def __init__(self):
         self.current_scene: Optional[str] = None
         self.scenes: dict[str, Scene] = {}
-    
+
     def add(self, scene: Scene, scene_name=str):
         flag_to_setup = True if len(self.scenes) == 0 else False
+        scene.manager = self
         self.scenes[scene_name] = scene
         if flag_to_setup:
             self.current_scene = scene_name
             self.scenes[self.current_scene].setup()
-    
+
     def change_scene(self, next_scene_name: str):
         self.scenes[self.current_scene].cleanup()
         self.current_scene = next_scene_name
         self.scenes[self.current_scene].setup()
-    
+
     def handle_event(self, event: pygame.event.Event):
         self.scenes[self.current_scene].handle_event(event)
-    
+
     def update(self, dt):
         self.scenes[self.current_scene].update(dt)
-        # print("scene: ", self.current_scene)

@@ -1,9 +1,7 @@
-from pygame.math import Vector2
-
 from . import entityclass
-from .components import Surface
+from .components import PygameSurface, Coordinate, Velocity
 
 @entityclass
-class Player(Vector2, Surface):
+class Player(Coordinate, PygameSurface, Velocity):
     pass
 

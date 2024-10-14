@@ -8,5 +8,13 @@ class Hp:
     hp: int = 0
 
 @dataclass
-class Surface:
+class PygameSurface:
     surface: pygame.Surface
+
+@dataclass
+class Coordinate:
+    pos: pygame.math.Vector2
+
+@dataclass
+class Velocity:
+    vel: pygame.math.Vector2
