@@ -1,5 +1,6 @@
+from collections import deque
 import os
-from typing import Any, Generator, Optional, Tuple, Type
+from typing import Any, Callable, Generator, Optional, Tuple, Type
 from dataclasses import dataclass, field
 from functools import partial
 
@@ -139,6 +140,16 @@ class Scene:
     screen: pygame.surface.Surface
     manager: Optional["SceneManager"] = None
 
+    @staticmethod
+    def print_clockinfo(fn: Callable, measurement_times=3):
+        fps_history = deque()
+        def wrapper(self, dt):
+            fps_history.append(1 / (dt / 1000) if dt != 0 else 0)
+            print(f"delta time: {dt}, FPS(Average over {measurement_times} measurements): {sum(fps_history) / len(fps_history)}")
+            if len(fps_history) > measurement_times:
+                fps_history.popleft()
+        return wrapper
+
     def setup(self):
         pass
 
@@ -160,9 +171,11 @@ class SceneManager:
         self.scenes: dict[str, Scene] = {}
     
     def add(self, scene: Scene, scene_name=str):
-        if len(self.scenes) == 0:
-            self.current_scene = scene_name
+        flag_to_setup = True if len(self.scenes) == 0 else False
         self.scenes[scene_name] = scene
+        if flag_to_setup:
+            self.current_scene = scene_name
+            self.scenes[self.current_scene].setup()
     
     def change_scene(self, next_scene_name: str):
         self.scenes[self.current_scene].cleanup()
@@ -174,4 +187,4 @@ class SceneManager:
     
     def update(self, dt):
         self.scenes[self.current_scene].update(dt)
-        print("scene: ", self.current_scene)
+        # print("scene: ", self.current_scene)
