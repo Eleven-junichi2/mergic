@@ -9,11 +9,19 @@ import pygame
 from pygame.event import Event
 from pygame.math import Vector2
 
-from mergic.components import PygameSurface
+from mergic.components import Actions, Coordinate, PygameSurface, TileCoordinate, TileVelocity, Velocity
 
-from . import GameWorld, AssetFinder, GameMap, ImageAtlas, SceneManager, Scene
-from .calculation_tools import calc_center_pos
-from .entities import Player
+from mergic import (
+    ActionController,
+    GameWorld,
+    AssetFinder,
+    GameMap,
+    ImageAtlas,
+    SceneManager,
+    Scene,
+)
+from mergic.calculation_tools import calc_center_pos
+from mergic.entities import Player
 
 
 FPS = 60
@@ -38,7 +46,7 @@ class TitleScene(Scene):
     def setup(self):
         self.title_surface = asset_finder.load_img("title")
         self.flag_gamescene = False
-    
+
     def handle_event(self, event: Event):
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_SPACE:
@@ -53,22 +61,56 @@ class TitleScene(Scene):
             calc_center_pos(self.title_surface.get_size(), self.screen.get_size()),
         )
 
+
 class GameScene(Scene):
     def setup(self):
         self.world = GameWorld()
         player_surf = pygame.Surface((16, 16))
         player_surf.fill(pygame.Color("red"))
-        player = Player(pos=Vector2(0, 0), surface=player_surf, vel=Vector2(0, 0))
+        player = Player(
+            pos=Vector2(0, 0),
+            surface=player_surf,
+            vel=Vector2(0, 0),
+            actions=ActionController(),
+        )
+        player.actions.add_action("tile_movement_x", {})
+        player.actions.add_action("tile_movement_y", {})
         self.world.add(player)
 
     def update(self, dt):
         self.screen.fill((0, 0, 0))
         scancode_map = pygame.key.get_pressed()
-        for player in self.world.entities_for_type(Player):
-            player.vel.y = 2 * (scancode_map[pygame.K_DOWN] - scancode_map[pygame.K_UP])
-            player.vel.x = 2 * (scancode_map[pygame.K_RIGHT] - scancode_map[pygame.K_LEFT])
-            player.pos += player.vel * dt / 1000
-            self.screen.blit(player.surface, player.pos)
+        for entity in self.world.entities_for_components(
+            Coordinate, Velocity, PygameSurface, Actions
+        ):
+            if isinstance(entity, Player):
+                vel_x = scancode_map[pygame.K_RIGHT] - scancode_map[pygame.K_LEFT]
+                vel_y = scancode_map[pygame.K_DOWN] - scancode_map[pygame.K_UP]
+                print("vx, vy", vel_x, vel_y)
+                if vel_x != 0:
+                    if not entity.actions.is_active("tile_movement_x"):
+                        entity.actions.do("tile_movement_x")
+                        entity.vel.x = vel_x
+                else:
+                    if not entity.actions.is_active("tile_movement_x"):
+                        entity.vel.x = vel_x
+                if entity.actions.is_active("tile_movement_x"):
+                    entity.pos.x += 16 * entity.vel.x * dt / 1000
+                    if round(entity.pos.x % 16) == 0:
+                        entity.actions.cancel("tile_movement_x")
+
+                if vel_y != 0:
+                    if not entity.actions.is_active("tile_movement_y"):
+                        entity.actions.do("tile_movement_y")
+                        entity.vel.y = vel_y
+                else:
+                    if not entity.actions.is_active("tile_movement_y"):
+                        entity.vel.y = vel_y
+                if entity.actions.is_active("tile_movement_y"):
+                    entity.pos.y += 16 * entity.vel.y * dt / 1000
+                    if round(entity.pos.y % 16) == 0:
+                        entity.actions.cancel("tile_movement_y")
+            self.screen.blit(entity.surface, entity.pos)
 
 
 def main():

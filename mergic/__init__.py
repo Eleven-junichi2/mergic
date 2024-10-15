@@ -118,12 +118,42 @@ class ECS:
     def entities_for_type[T](self, entity_type: Type[T]) -> Generator[T, Any, None]:
         yield from self.entities[entity_type]
 
-    def entities_for_components(self, *component_types: type):
+    def entities_for_components[T](
+        self, *component_types: type[T]
+    ) -> Generator[T, Any, None]:
         # fix this to be more efficient
         for component_type in component_types:
             for entity_type in self.entities.keys():
                 if component_type in entity_type.__mro__:
                     yield from self.entities_for_type(entity_type)
+
+
+class ActionController:
+    def __init__(self):
+        self.actions: dict[
+            str, dict[str, bool | Any]
+        ] = {}  # example: { "action_key": {"active": False, "property": {}}}
+
+    def add_action(self, action: str, property: dict):
+        self.actions.setdefault(action, {"active": False, "property": property})
+    
+    def mutable_property(self, action: str):
+        return self.actions[action]["property"]
+
+    def do(self, action: str):
+        if self.actions.get(action, False):
+            self.actions[action]["active"] = True
+        else:
+            raise ValueError(f"Action '{action}' is not registered")
+
+    def cancel(self, action: str):
+        if self.actions.get(action, False):
+            self.actions[action]["active"] = False
+        else:
+            raise ValueError(f"Action '{action}' is not registered")
+
+    def is_active(self, action: str) -> bool:
+        return self.actions[action]["active"]
 
 
 class GameWorld(ECS):

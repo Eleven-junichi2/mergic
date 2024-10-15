@@ -57,7 +57,7 @@ class TestECS(unittest.TestCase):
         for entity in world.entities_for_type(DummyEntity):
             self.assertEqual(isinstance(entity, DummyEntity), True)
 
-    def test_entities_for_components(self):
+    def test_entities_for_component(self):
         world = ECS()
         world.add(DummyEntity())
         world.add(DummyEntity2())
