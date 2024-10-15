@@ -302,7 +302,12 @@ class MenuCursor:
 
 
 class MenuUI:
-    def __init__(self, menu: TextMenu, font: pygame.freetype.Font, cursor: Optional[MenuCursor] = None):
+    def __init__(
+        self,
+        menu: TextMenu,
+        font: pygame.freetype.Font,
+        cursor: Optional[MenuCursor] = None,
+    ):
         self.menu = menu
         self.font = font
         self.cursor: Optional[MenuCursor] = cursor
