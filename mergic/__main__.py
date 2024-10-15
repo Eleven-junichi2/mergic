@@ -1,5 +1,5 @@
 # TODO: make tests
-from collections import deque
+from collections import OrderedDict, deque
 from pathlib import Path
 import tomllib
 import json
@@ -9,7 +9,14 @@ import pygame
 from pygame.event import Event
 from pygame.math import Vector2
 
-from mergic.components import Actions, Coordinate, PygameSurface, TileCoordinate, TileVelocity, Velocity
+from mergic.components import (
+    Actions,
+    Coordinate,
+    PygameSurface,
+    TileCoordinate,
+    TileVelocity,
+    Velocity,
+)
 
 from mergic import (
     ActionController,
@@ -17,8 +24,12 @@ from mergic import (
     AssetFinder,
     GameMap,
     ImageAtlas,
+    MenuCursor,
+    MenuCursorRenderPosition,
+    MenuUI,
     SceneManager,
     Scene,
+    TextMenu,
 )
 from mergic.calculation_tools import calc_center_pos
 from mergic.entities import Player
@@ -30,6 +41,7 @@ ASSETS_DIR = Path(__file__).parent / "assets"
 
 asset_finder = AssetFinder()
 asset_finder.register("title", ASSETS_DIR / "imgs" / "title.png")
+asset_finder.register("font", ASSETS_DIR / "fonts" / "k8x12L.ttf")
 
 
 def load_config():
@@ -40,6 +52,32 @@ def load_config():
 def load_localized_texts(language_code="en"):
     with open(Path(__file__).parent / "i18n" / f"{language_code}.json", "r") as f:
         return json.load(f)
+
+
+class TestMenuScene(Scene):
+    def setup(self):
+        self.font = asset_finder.load_font("font")
+        self.font.size = 12
+        self.font.fgcolor = pygame.color.Color(255, 255, 255)
+        menu = TextMenu()
+        menu.add_option("option1")
+        menu.add_option("option2")
+        menu.add_option("option3")
+        menucursor = MenuCursor()
+        menucursor.set_surface(self.font.render("<>")[0])
+        menucursor.set_render_position(MenuCursorRenderPosition.LEFT)
+        self.menuui = MenuUI(menu, self.font, menucursor)
+        pygame.key.set_repeat(111, 111)
+
+    def handle_event(self, event: Event):
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_UP:
+                self.menuui.menu.selector_up()
+            if event.key == pygame.K_DOWN:
+                self.menuui.menu.selector_down()
+
+    def update(self, dt):
+        self.screen.blit(self.menuui.render(), (0, 0))
 
 
 class TitleScene(Scene):
@@ -121,6 +159,7 @@ def main():
     display = pygame.display.set_mode(screen_size)
     screen = pygame.surface.Surface([size // px_scale for size in screen_size])
     scene_manager = SceneManager()
+    scene_manager.add(TestMenuScene(screen), "test_menu")
     scene_manager.add(TitleScene(screen), "title")
     scene_manager.add(GameScene(screen), "game")
     running = True

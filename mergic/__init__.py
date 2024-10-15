@@ -1,10 +1,12 @@
-from collections import deque
-import os
+from collections import OrderedDict, deque
+from enum import Enum, auto
 from typing import Any, Callable, Generator, Optional, Tuple, Type
 from dataclasses import dataclass, field
 from functools import partial
+import os
 
 import pygame
+import pygame.freetype
 
 entityclass = partial(dataclass, slots=True)
 
@@ -21,6 +23,9 @@ class AssetFinder:
 
     def load_sound(self, name) -> pygame.mixer.Sound:
         return pygame.mixer.Sound(self.dict[name])
+
+    def load_font(self, name) -> pygame.freetype.Font:
+        return pygame.freetype.Font(self.dict[name])
 
     def filepath(self, name) -> str | os.PathLike:
         return self.dict[name]
@@ -136,7 +141,7 @@ class ActionController:
 
     def add_action(self, action: str, property: dict):
         self.actions.setdefault(action, {"active": False, "property": property})
-    
+
     def mutable_property(self, action: str):
         return self.actions[action]["property"]
 
@@ -227,3 +232,114 @@ class SceneManager:
 
     def update(self, dt):
         self.scenes[self.current_scene].update(dt)
+
+
+class TextMenu:
+    def __init__(self):
+        self.options: OrderedDict[str, Callable] = OrderedDict()
+        self.__longest_text_length: int = 0
+        self.__selector: int = 0
+
+    @property
+    def longest_text_length(self) -> int:
+        return self.__longest_text_length
+
+    @property
+    def selector(self) -> int:
+        return self.__selector
+
+    @selector.setter
+    def selector(self, value: int):
+        self.__selector = value
+
+    def selector_up(self):
+        self.selector = (self.selector - 1) % len(
+            self.options
+        )  # selector番号がoption数と一致すると余りなし=0となるので選択をループできる
+
+    def selector_down(self):
+        self.selector = (self.selector + 1) % len(self.options)
+
+    def add_option(
+        self, text: str, key: Optional[str] = None, callback: Optional[Callable] = None
+    ):
+        text_length = len(text)
+        self.__longest_text_length = (
+            text_length
+            if text_length > self.longest_text_length
+            else self.longest_text_length
+        )
+        if key is None:
+            key = text
+        self.options[key] = {"text": text, "callback": callback}
+
+    def current_selection(self):
+        return list(self.options.values())[self.selector]
+
+    def execute_current_selection(self):
+        return self.current_selection()["callback"]()
+
+
+class MenuHighlightStyle(Enum):
+    pass
+
+
+class MenuCursorRenderPosition(Enum):
+    LEFT = auto()
+    RIGHT = auto()
+
+
+class MenuCursor:
+    def __init__(self):
+        self.surface = None
+        self.render_position = MenuCursorRenderPosition.RIGHT
+
+    def set_surface(self, surface: pygame.surface.Surface):
+        self.surface = surface
+
+    def set_render_position(self, position: MenuCursorRenderPosition):
+        self.render_position = position
+
+
+class MenuUI:
+    def __init__(self, menu: TextMenu, font: pygame.freetype.Font, cursor: Optional[MenuCursor] = None):
+        self.menu = menu
+        self.font = font
+        self.cursor: Optional[MenuCursor] = cursor
+        self.is_focused = False
+        self.highlight_style: Optional[None] = None
+        self.surface_cache: Optional[pygame.surface.Surface] = (
+            None  # unused TODO: implement
+        )
+
+    def render(self) -> pygame.surface.Surface:
+        cursor_width = 0
+        if self.cursor:
+            cursor_width = self.cursor.surface.get_width()
+        entire_surface = pygame.surface.Surface(
+            (
+                self.font.size * self.menu.longest_text_length + cursor_width,
+                self.font.size * len(self.menu.options),
+            )
+        )
+        for i, option in enumerate(self.menu.options.values()):
+            text_surface, text_rect = self.font.render(option["text"])
+            text_x = 0
+            text_y = i * text_rect.height
+            if i == self.menu.selector and self.cursor:
+                match self.cursor.render_position:
+                    case MenuCursorRenderPosition.LEFT:
+                        entire_surface.blit(self.cursor.surface, (text_x, text_y))
+                        text_x = cursor_width
+                    case MenuCursorRenderPosition.RIGHT:
+                        entire_surface.blit(
+                            self.cursor.surface, (text_rect.width, text_y)
+                        )
+            entire_surface.blit(
+                text_surface,
+                (text_x, text_y),
+            )
+        return entire_surface
+
+    def update(self, dt):
+        raise NotImplementedError

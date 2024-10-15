@@ -1,8 +1,7 @@
 from dataclasses import dataclass
-from test.support import captured_output
 import unittest
 
-from mergic import ECS, GameMap, entityclass, GameWorld
+from mergic import ECS, GameMap, TextMenu, entityclass, GameWorld, TextMenu
 
 
 @dataclass
@@ -108,6 +107,31 @@ class TestGameMap(unittest.TestCase):
                 [0, 0, 0, 0, 1],
             ],
         )
+
+class TestTextMenu(unittest.TestCase):
+    def test_game_menu_selector(self):
+        gamemenu = TextMenu()
+        gamemenu.add_option("New Game")
+        gamemenu.add_option(text="Save Game", key="save")
+        gamemenu.add_option("Load Game")
+        self.assertEqual(gamemenu.current_selection()["text"], "New Game")
+        gamemenu.selector_up()
+        self.assertEqual(gamemenu.current_selection()["text"], "Load Game")
+        gamemenu.selector_down()
+        self.assertEqual(gamemenu.current_selection()["text"], "New Game")
+        gamemenu.selector_down()
+        self.assertEqual(gamemenu.current_selection()["text"], "Save Game")
+        gamemenu.selector_down()
+        self.assertEqual(gamemenu.current_selection()["text"], "Load Game")
+        gamemenu.selector_down()
+        self.assertEqual(gamemenu.current_selection()["text"], "New Game")
+    
+    def test_game_menu_storing_longest_text_length(self):
+        gamemenu = TextMenu()
+        gamemenu.add_option("abc")
+        gamemenu.add_option(text="happy", key="save")
+        gamemenu.add_option("うおお")
+        self.assertEqual(gamemenu.longest_text_length, 5)
 
 
 if __name__ == "__main__":
