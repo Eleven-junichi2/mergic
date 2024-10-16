@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 import unittest
 
-from mergic import ECS, GameMap, TextMenu, entityclass, GameWorld, TextMenu
+from mergic import ECS, GameMap, TextMenu, entityclass, GameWorld
 
 
 @dataclass
@@ -78,7 +78,7 @@ class TestGameMap(unittest.TestCase):
         gamemap = GameMap(3, 3)
         with self.assertRaises(ValueError):
             gamemap.paint("example", 3, 0, 0)
-    
+
     def test_gamemap_coords_for_elements(self):
         gamemap = GameMap(6, 6)
         gamemap.import_layer("ground", {"0,0": 1, "4,4": 1})
@@ -108,6 +108,7 @@ class TestGameMap(unittest.TestCase):
             ],
         )
 
+
 class TestTextMenu(unittest.TestCase):
     def test_game_menu_selector(self):
         gamemenu = TextMenu()
@@ -125,7 +126,7 @@ class TestTextMenu(unittest.TestCase):
         self.assertEqual(gamemenu.current_selection()["text"], "Load Game")
         gamemenu.selector_down()
         self.assertEqual(gamemenu.current_selection()["text"], "New Game")
-    
+
     def test_game_menu_storing_longest_text_length(self):
         gamemenu = TextMenu()
         gamemenu.add_option("abc")
