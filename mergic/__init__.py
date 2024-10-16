@@ -1,6 +1,7 @@
 from collections import OrderedDict, deque
 from enum import Enum, auto
-from typing import Any, Callable, Generator, Optional, Tuple, Type
+from pathlib import Path
+from typing import Any, Callable, Generator, Iterable, Optional, Tuple, Type
 from dataclasses import dataclass, field
 from functools import partial
 import os
@@ -18,11 +19,35 @@ class AssetFinder:
     def register(self, name: str, filepath: str | os.PathLike):
         self.dict[name] = filepath
 
+    def register_all_in_dir(
+        self,
+        dirpath: str | os.PathLike,
+        naming_with_suffix: bool = False,
+        inclusive_exts: Optional[Tuple[str]] = None,
+        exclusive_exts: Optional[Tuple[str]] = None,
+    ):        
+        registered_names = deque()
+        for filepath in Path(dirpath).iterdir():
+            if filepath.is_file():
+                if inclusive_exts:
+                    if filepath.suffix not in inclusive_exts:
+                        continue
+                if exclusive_exts:
+                    if filepath.suffix in exclusive_exts:
+                        continue
+                if naming_with_suffix:
+                    name = filepath.name
+                else:
+                    name = filepath.stem
+                self.register(name, filepath)
+                registered_names.append(name)
+        return registered_names
+
     def load_img(self, name) -> pygame.Surface:
         return pygame.image.load(self.dict[name])
 
     def load_sound(self, name) -> pygame.mixer.Sound:
-        return pygame.mixer.Sound(self.dict[name])
+        return pygame.mixer.Sound(str(self.dict[name]))
 
     def load_font(self, name) -> pygame.freetype.Font:
         return pygame.freetype.Font(self.dict[name])
@@ -274,10 +299,10 @@ class TextMenu:
         self.options[key] = {"text": text, "callback": callback}
 
     def current_selection(self):
-        return list(self.options.values())[self.selector]
+        return list(self.options.items())[self.selector]
 
     def execute_current_selection(self):
-        return self.current_selection()["callback"]()
+        return self.current_selection()[1]["callback"]()
 
 
 class MenuHighlightStyle(Enum):

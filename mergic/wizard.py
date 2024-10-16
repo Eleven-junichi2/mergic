@@ -1,6 +1,14 @@
+from enum import Enum, auto
 from math import log10
 from itertools import permutations
 import pdb
+
+
+class AlchemicalElement(Enum):
+    HEAT = auto()
+    COLD = auto()
+    LIGHT = auto()
+    DARK = auto()
 
 
 def is_vampire_number(number: int) -> bool:

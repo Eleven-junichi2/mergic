@@ -42,6 +42,10 @@ ASSETS_DIR = Path(__file__).parent / "assets"
 asset_finder = AssetFinder()
 asset_finder.register("title", ASSETS_DIR / "imgs" / "title.png")
 asset_finder.register("font", ASSETS_DIR / "fonts" / "k8x12L.ttf")
+music_asset_names = asset_finder.register_all_in_dir(
+    ASSETS_DIR / "sounds" / "musics", inclusive_exts=[".wav", ".ogg"]
+)
+print(asset_finder.dict.keys())
 
 
 def load_config():
@@ -52,6 +56,44 @@ def load_config():
 def load_localized_texts(language_code="en"):
     with open(Path(__file__).parent / "i18n" / f"{language_code}.json", "r") as f:
         return json.load(f)
+
+
+class SoundTestScene(Scene):
+    def setup(self):
+        self.font = asset_finder.load_font("font")
+        self.font.size = 12
+        self.font.fgcolor = pygame.color.Color(255, 255, 255)
+        menu = TextMenu()
+        self.music_library: dict[str, pygame.mixer.Sound] = {}
+        for name in music_asset_names:
+            self.music_library[name] = asset_finder.load_sound(name)
+        for music_name in self.music_library.keys():
+            menu.add_option(music_name, callback=self.play_music)
+        menucursor = MenuCursor()
+        menucursor.set_surface(self.font.render("♪")[0])
+        self.menuui = MenuUI(menu, self.font, menucursor)
+        pygame.key.set_repeat(111, 111)
+        pygame.event.set_allowed(pygame.KEYDOWN)
+
+    def play_music(self):
+        music_selection = self.menuui.menu.current_selection()[0]
+        for name in self.music_library.keys():
+            if name != music_selection:
+                self.music_library[name].stop()
+        self.music_library[music_selection].play()
+
+    def handle_event(self, event: Event):
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_UP:
+                self.menuui.menu.selector_up()
+            if event.key == pygame.K_DOWN:
+                self.menuui.menu.selector_down()
+            if event.key == pygame.K_SPACE:
+                self.menuui.menu.execute_current_selection()
+
+    def update(self, dt):
+        print("hoo")
+        self.screen.blit(self.menuui.render(), (0, 0))
 
 
 class TestMenuScene(Scene):
@@ -68,7 +110,7 @@ class TestMenuScene(Scene):
         menucursor.set_render_position(MenuCursorRenderPosition.LEFT)
         self.menuui = MenuUI(menu, self.font, menucursor)
         pygame.key.set_repeat(111, 111)
-
+    
     def handle_event(self, event: Event):
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_UP:
@@ -83,21 +125,37 @@ class TestMenuScene(Scene):
 class TitleScene(Scene):
     def setup(self):
         self.title_surface = asset_finder.load_img("title")
+        self.title_pos = calc_center_pos(
+            self.title_surface.get_size(), self.screen.get_size()
+        )
         self.flag_gamescene = False
+        self.font = asset_finder.load_font("font")
+        self.font.size = 12
+        self.font.fgcolor = pygame.color.Color(255, 255, 255)
+        menu = TextMenu()
+        menu.add_option("Sound Test", callback=lambda: self.change_scene("sound_test"))
+        menu.add_option("Exit", callback=lambda: pygame.event.post(pygame.event.Event(pygame.QUIT)))
+        menucursor = MenuCursor()
+        menucursor.set_surface(self.font.render("<")[0])
+        self.menuui = MenuUI(menu, self.font, menucursor)
+        pygame.key.set_repeat(111, 111)
 
     def handle_event(self, event: Event):
         if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_UP:
+                self.menuui.menu.selector_up()
+            if event.key == pygame.K_DOWN:
+                self.menuui.menu.selector_down()
             if event.key == pygame.K_SPACE:
-                self.flag_gamescene = True
+                pygame.event.set_blocked(pygame.KEYDOWN)
+                self.menuui.menu.execute_current_selection()
 
-    @Scene.print_clockinfo
     def update(self, dt):
-        if self.flag_gamescene:
-            self.change_scene("game")
         self.screen.blit(
             self.title_surface,
-            calc_center_pos(self.title_surface.get_size(), self.screen.get_size()),
+            (self.title_pos[0], self.title_pos[1] // 2),
         )
+        self.screen.blit(self.menuui.render(), (0, self.title_pos[1] // 2 + 1))
 
 
 class GameScene(Scene):
@@ -159,8 +217,9 @@ def main():
     display = pygame.display.set_mode(screen_size)
     screen = pygame.surface.Surface([size // px_scale for size in screen_size])
     scene_manager = SceneManager()
-    scene_manager.add(TestMenuScene(screen), "test_menu")
     scene_manager.add(TitleScene(screen), "title")
+    scene_manager.add(SoundTestScene(screen), "sound_test")
+    scene_manager.add(TestMenuScene(screen), "test_menu")
     scene_manager.add(GameScene(screen), "game")
     running = True
     dt = 0

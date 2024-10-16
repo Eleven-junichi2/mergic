@@ -2,7 +2,6 @@ import unittest
 
 from mergic import wizard
 
-
 class TestWizard(unittest.TestCase):
     def test_magic(self):
         self.assertSetEqual(
