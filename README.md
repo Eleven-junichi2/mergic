@@ -1,4 +1,4 @@
-# mergic
+# Wizahlen
 
 rpg game
 

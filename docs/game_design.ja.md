@@ -15,4 +15,7 @@
 tiletype_to_surf タイルの種類に対するpygame.Surfaceの辞書。str: pygame.Surface
 assetname_to_filepath ファイルパスに対するエイリアス名辞書。 AssetFinderがこの役目を担う
 
-## Integral Spell
+## Integer Spell
+
+このゲームの魔法は、プレイヤーが自作することができる。
+

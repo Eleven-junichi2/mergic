@@ -1,7 +1,17 @@
 from collections import OrderedDict, deque
 from enum import Enum, auto
 from pathlib import Path
-from typing import Any, Callable, Generator, Iterable, Optional, Sequence, SupportsInt, Tuple, Type
+from typing import (
+    Any,
+    Callable,
+    Generator,
+    Iterable,
+    Optional,
+    Sequence,
+    SupportsInt,
+    Tuple,
+    Type,
+)
 from dataclasses import dataclass, field
 from functools import partial
 import os
@@ -25,7 +35,7 @@ class AssetFinder:
         naming_with_suffix: bool = False,
         inclusive_exts: Optional[Tuple[str]] = None,
         exclusive_exts: Optional[Tuple[str]] = None,
-    ):        
+    ):
         registered_names = deque()
         for filepath in Path(dirpath).iterdir():
             if filepath.is_file():
@@ -247,7 +257,11 @@ class SceneManager:
             self.current_scene = scene_name
             self.scenes[self.current_scene].setup()
 
-    def change_scene(self, next_scene_name: str, block_events_until_setup_finished: Optional[Sequence[pygame.event.EventType]]):
+    def change_scene(
+        self,
+        next_scene_name: str,
+        block_events_until_setup_finished: Optional[Sequence[pygame.event.EventType]],
+    ):
         if block_events_until_setup_finished:
             pygame.event.set_blocked(block_events_until_setup_finished)
         self.scenes[self.current_scene].cleanup()
@@ -265,7 +279,7 @@ class SceneManager:
 
 class TextMenu:
     def __init__(self):
-        self.options: OrderedDict[str, Callable] = OrderedDict()
+        self.options: OrderedDict[str, Callable | str] = OrderedDict()
         self.__longest_text_length: int = 0
         self.__selector: int = 0
 
@@ -290,7 +304,11 @@ class TextMenu:
         self.selector = (self.selector + 1) % len(self.options)
 
     def add_option(
-        self, text: str, key: Optional[str] = None, callback: Optional[Callable] = None
+        self,
+        text: str,
+        key: Optional[str] = None,
+        callback: Optional[Callable] = None,
+        tag: Optional[str] = None,
     ):
         text_length = len(text)
         self.__longest_text_length = (
@@ -300,7 +318,7 @@ class TextMenu:
         )
         if key is None:
             key = text
-        self.options[key] = {"text": text, "callback": callback}
+        self.options[key] = {"text": text, "callback": callback, "tag": tag}
 
     def current_selection(self):
         return list(self.options.items())[self.selector]
@@ -309,25 +327,45 @@ class TextMenu:
         return self.current_selection()[1]["callback"]()
 
 
-class MenuHighlightStyle(Enum):
-    pass
+@dataclass
+class MenuHighlightStyle:
+    fgcolor: Optional[pygame.color.Color] = None
+    bgcolor: Optional[pygame.color.Color] = None
+    lerping_fgcolor_amount: Optional[float] = None
+    lerping_bgcolor_amount: Optional[float] = None
 
 
-class MenuCursorRenderPosition(Enum):
-    LEFT = auto()
-    RIGHT = auto()
+class MenuUICursorStyle(Enum):
+    ATTACH_LEFT = auto()
+    ATTACH_RIGHT = auto()
 
 
-class MenuCursor:
+class MenuUICursor:
     def __init__(self):
         self.surface = None
-        self.render_position = MenuCursorRenderPosition.RIGHT
+        self.render_position = MenuUICursorStyle.ATTACH_RIGHT
 
     def set_surface(self, surface: pygame.surface.Surface):
         self.surface = surface
 
-    def set_render_position(self, position: MenuCursorRenderPosition):
+    def set_render_position(self, position: MenuUICursorStyle):
         self.render_position = position
+
+
+class MenuUIAction(Enum):
+    SELECTOR_UP = auto()
+    SELECTOR_DOWN = auto()
+    EXECUTE = auto()
+
+
+class MenuUIViewMode(Enum):
+    PAGING = auto()
+    SCROLL = auto()  # not implemented
+
+
+class MenuUIPageIndicatorStyle(Enum):
+    ATTACH_BOTTOM = auto()
+    ATTACH_TOP = auto()
 
 
 class MenuUI:
@@ -335,43 +373,131 @@ class MenuUI:
         self,
         menu: TextMenu,
         font: pygame.freetype.Font,
-        cursor: Optional[MenuCursor] = None,
+        cursor: Optional[MenuUICursor] = None,
+        highlight_style: Optional[MenuHighlightStyle] = None,
+        max_display_options: Optional[int] = None,
+        view_mode: Optional[MenuUIViewMode] = MenuUIViewMode.PAGING,
+        page_indicator_style: Optional[MenuUIPageIndicatorStyle] = None,
     ):
         self.menu = menu
         self.font = font
-        self.cursor: Optional[MenuCursor] = cursor
-        self.is_focused = False
-        self.highlight_style: Optional[None] = None
+        self.cursor = cursor
+        self.highlight_style = highlight_style
         self.surface_cache: Optional[pygame.surface.Surface] = (
             None  # unused TODO: implement
         )
+        self.control_map = {
+            pygame.KEYDOWN: {
+                pygame.K_UP: MenuUIAction.SELECTOR_UP,
+                pygame.K_DOWN: MenuUIAction.SELECTOR_DOWN,
+                pygame.K_SPACE: MenuUIAction.EXECUTE,
+            },
+            pygame.MOUSEBUTTONDOWN: {
+                pygame.BUTTON_WHEELUP: MenuUIAction.SELECTOR_UP,
+                pygame.BUTTON_WHEELDOWN: MenuUIAction.SELECTOR_DOWN,
+            },
+        }
+        self.max_display_options = max_display_options
+        self.view_mode = view_mode
+        self.is_focused = False
+        self.page_indicator_style = page_indicator_style
+
+    def focus(self):
+        self.is_focused = True
+
+    def unfocus(self):
+        self.is_focused = False
+
+    def handle_event(self, event: pygame.event.Event):
+        if not self.is_focused:
+            return
+        if event.type == pygame.KEYDOWN:
+            action = self.control_map[event.type].get(event.key)
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+            action = self.control_map[event.type].get(event.button)
+        else:
+            action = None
+        if action == MenuUIAction.SELECTOR_UP:
+            self.menu.selector_up()
+        elif action == MenuUIAction.SELECTOR_DOWN:
+            self.menu.selector_down()
+        elif action == MenuUIAction.EXECUTE:
+            self.menu.execute_current_selection()
 
     def render(self) -> pygame.surface.Surface:
-        cursor_width = 0
+        cursor_space_attach_left = 0
+        cursor_space_attach_right = 0
+        page_indicator_space_attach_top = 0
         if self.cursor:
-            cursor_width = self.cursor.surface.get_width()
+            if self.cursor.render_position == MenuUICursorStyle.ATTACH_LEFT:
+                cursor_space_attach_left = self.cursor.surface.get_width()
+            if self.cursor.render_position == MenuUICursorStyle.ATTACH_RIGHT:
+                cursor_space_attach_right = self.cursor.surface.get_width()
+        if self.page_indicator_style:
+            page_indicator_space_attach_top = self.font.size
         entire_surface = pygame.surface.Surface(
             (
-                self.font.size * self.menu.longest_text_length + cursor_width,
-                self.font.size * len(self.menu.options),
+                cursor_space_attach_left
+                + self.font.size * self.menu.longest_text_length
+                + cursor_space_attach_right,
+                page_indicator_space_attach_top
+                + self.font.size * len(self.menu.options),
             )
         )
-        for i, option in enumerate(self.menu.options.values()):
-            text_surface, text_rect = self.font.render(option["text"])
-            text_x = 0
-            text_y = i * text_rect.height
-            if i == self.menu.selector and self.cursor:
+        display_start = 0
+        display_end = len(self.menu.options)
+        if self.max_display_options:
+            if self.view_mode == MenuUIViewMode.PAGING:
+                display_start = self.max_display_options * (
+                    self.menu.selector // self.max_display_options
+                )
+                display_end = self.max_display_options + display_start
+            elif self.view_mode == MenuUIViewMode.SCROLL:
+                raise NotImplementedError
+        for i, option in enumerate(
+            tuple(self.menu.options.values())[display_start:display_end]
+        ):
+            if i + display_start == self.menu.selector and self.highlight_style:
+                fg = self.highlight_style.fgcolor
+                if self.highlight_style.lerping_fgcolor_amount:
+                    fg.lerp(
+                        self.font.fgcolor, self.highlight_style.lerping_fgcolor_amount
+                    )
+                bg = self.highlight_style.bgcolor
+                if self.highlight_style.lerping_bgcolor_amount:
+                    bg.lerp(
+                        self.font.bgcolor, self.highlight_style.lerping_bgcolor_amount
+                    )
+            else:
+                fg = None
+                bg = None
+            text_surface, text_rect = self.font.render(
+                option["text"], fgcolor=fg, bgcolor=bg
+            )
+            text_y = page_indicator_space_attach_top + i * text_rect.height
+            if i + display_start == self.menu.selector and self.cursor:
                 match self.cursor.render_position:
-                    case MenuCursorRenderPosition.LEFT:
-                        entire_surface.blit(self.cursor.surface, (text_x, text_y))
-                        text_x = cursor_width
-                    case MenuCursorRenderPosition.RIGHT:
+                    case MenuUICursorStyle.ATTACH_LEFT:
+                        entire_surface.blit(self.cursor.surface, (0, text_y))
+                    case MenuUICursorStyle.ATTACH_RIGHT:
                         entire_surface.blit(
                             self.cursor.surface, (text_rect.width, text_y)
                         )
             entire_surface.blit(
                 text_surface,
-                (text_x, text_y),
+                (cursor_space_attach_left, text_y),
+            )
+        if self.page_indicator_style:
+            page_indicator_y = 0
+            if self.page_indicator_style == MenuUIPageIndicatorStyle.ATTACH_BOTTOM:
+                page_indicator_y = text_y + self.font.size
+            entire_surface.blit(
+                self.font.render(
+                    f"Page:{self.menu.selector // self.max_display_options + 1}/{len(self.menu.options) // self.max_display_options + 1}",
+                    fgcolor=self.font.fgcolor,
+                    bgcolor=self.font.bgcolor,
+                )[0],
+                (0, page_indicator_y),
             )
         return entire_surface
 

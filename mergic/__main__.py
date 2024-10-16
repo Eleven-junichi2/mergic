@@ -1,9 +1,10 @@
 # TODO: make tests
 from collections import OrderedDict, deque
+from dataclasses import dataclass
 from pathlib import Path
 import tomllib
 import json
-from typing import Iterable, Tuple
+from typing import Iterable, Optional, Tuple
 
 import pygame
 from pygame.event import Event
@@ -24,9 +25,11 @@ from mergic import (
     AssetFinder,
     GameMap,
     ImageAtlas,
-    MenuCursor,
-    MenuCursorRenderPosition,
+    MenuUICursor,
+    MenuUICursorStyle,
+    MenuHighlightStyle,
     MenuUI,
+    MenuUIPageIndicatorStyle,
     SceneManager,
     Scene,
     TextMenu,
@@ -45,7 +48,12 @@ asset_finder.register("font", ASSETS_DIR / "fonts" / "k8x12L.ttf")
 music_asset_names = asset_finder.register_all_in_dir(
     ASSETS_DIR / "sounds" / "musics", inclusive_exts=[".wav", ".ogg"]
 )
-print(asset_finder.dict.keys())
+
+
+@dataclass
+class Config:  # unused
+    music_volume: float
+    sound_effect_volume: float
 
 
 def load_config():
@@ -62,33 +70,53 @@ class SoundTestScene(Scene):
     def setup(self):
         self.font = asset_finder.load_font("font")
         self.font.size = 12
-        self.font.fgcolor = pygame.color.Color(255, 255, 255)
+        self.font.fgcolor = pygame.color.Color(200, 200, 222)
         menu = TextMenu()
-        self.music_library: dict[str, pygame.mixer.Sound] = {}
-        for name in music_asset_names:
-            self.music_library[name] = asset_finder.load_sound(name)
-        for music_name in self.music_library.keys():
-            menu.add_option(music_name, callback=self.play_music)
-        menucursor = MenuCursor()
-        menucursor.set_surface(self.font.render("♪")[0])
-        self.menuui = MenuUI(menu, self.font, menucursor)
+        menu.add_option(
+            "Back to Title",
+            key="back_to_title",
+            callback=lambda: self.manager.change_scene("title", pygame.KEYDOWN),
+        )
+        for music_name in music_asset_names:
+            menu.add_option(
+                music_name, callback=self.manipulate_music_player, tag="music"
+            )
+        menucursor = MenuUICursor()
+        menucursor.set_surface(
+            self.font.render("♪", fgcolor=pygame.color.Color(255, 255, 255))[0]
+        )
+        self.menuui = MenuUI(
+            menu,
+            self.font,
+            menucursor,
+            highlight_style=MenuHighlightStyle(
+                fgcolor=pygame.color.Color(255, 255, 255)
+            ),
+            max_display_options=6,
+            page_indicator_style=MenuUIPageIndicatorStyle.ATTACH_BOTTOM,
+        )
+        self.menuui.focus()
+        self.current_music: Optional[str] = None
         pygame.key.set_repeat(111, 111)
 
-    def play_music(self):
-        music_selection = self.menuui.menu.current_selection()[0]
-        for name in self.music_library.keys():
-            if name != music_selection:
-                self.music_library[name].stop()
-        self.music_library[music_selection].play()
+    def manipulate_music_player(self):
+        current_selection = self.menuui.menu.current_selection()
+        if current_selection[1]["tag"] == "music":
+            if pygame.mixer_music.get_busy() and (
+                self.current_music == current_selection[0]
+            ):
+                pygame.mixer_music.stop()
+            else:
+                pygame.mixer_music.load(asset_finder.filepath(current_selection[0]))
+                pygame.mixer_music.play()
+                self.current_music = current_selection[0]
+
+    def cleanup(self):
+        pygame.mixer_music.stop()
+        pygame.mixer_music.unload()
 
     def handle_event(self, event: Event):
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_UP:
-                self.menuui.menu.selector_up()
-            if event.key == pygame.K_DOWN:
-                self.menuui.menu.selector_down()
-            if event.key == pygame.K_SPACE:
-                self.menuui.menu.execute_current_selection()
+        self.menuui.handle_event(event)
 
     def update(self, dt):
         self.screen.blit(self.menuui.render(), (0, 0))
@@ -103,18 +131,15 @@ class TestMenuScene(Scene):
         menu.add_option("option1")
         menu.add_option("option2")
         menu.add_option("option3")
-        menucursor = MenuCursor()
+        menucursor = MenuUICursor()
         menucursor.set_surface(self.font.render("<>")[0])
-        menucursor.set_render_position(MenuCursorRenderPosition.LEFT)
+        menucursor.set_render_position(MenuUICursorStyle.LEFT)
         self.menuui = MenuUI(menu, self.font, menucursor)
+        self.menuui.focus()
         pygame.key.set_repeat(111, 111)
 
     def handle_event(self, event: Event):
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_UP:
-                self.menuui.menu.selector_up()
-            if event.key == pygame.K_DOWN:
-                self.menuui.menu.selector_down()
+        self.menuui.handle_event(event)
 
     def update(self, dt):
         self.screen.blit(self.menuui.render(), (0, 0))
@@ -140,25 +165,21 @@ class TitleScene(Scene):
         menu.add_option(
             "Exit", callback=lambda: pygame.event.post(pygame.event.Event(pygame.QUIT))
         )
-        menucursor = MenuCursor()
+        menucursor = MenuUICursor()
         menucursor.set_surface(self.font.render("<")[0])
         self.menuui = MenuUI(menu, self.font, menucursor)
+        self.menuui.focus()
         pygame.key.set_repeat(111, 111)
 
     def handle_event(self, event: Event):
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_UP:
-                self.menuui.menu.selector_up()
-            if event.key == pygame.K_DOWN:
-                self.menuui.menu.selector_down()
-            if event.key == pygame.K_SPACE:
-                self.menuui.menu.execute_current_selection()
+        self.menuui.handle_event(event)
 
     def update(self, dt):
-        self.screen.blit(
-            self.title_surface,
-            (self.title_pos[0], self.title_pos[1] // 2),
-        )
+        self.screen.fill((0, 0, 0))
+        # self.screen.blit(
+        #     self.title_surface,
+        #     (self.title_pos[0], self.title_pos[1] // 2),
+        # )
         self.screen.blit(self.menuui.render(), (0, self.title_pos[1] // 2 + 1))
 
 
