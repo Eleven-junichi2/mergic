@@ -1,7 +1,7 @@
 from collections import OrderedDict, deque
 from enum import Enum, auto
 from pathlib import Path
-from typing import Any, Callable, Generator, Iterable, Optional, Tuple, Type
+from typing import Any, Callable, Generator, Iterable, Optional, Sequence, SupportsInt, Tuple, Type
 from dataclasses import dataclass, field
 from functools import partial
 import os
@@ -247,10 +247,14 @@ class SceneManager:
             self.current_scene = scene_name
             self.scenes[self.current_scene].setup()
 
-    def change_scene(self, next_scene_name: str):
+    def change_scene(self, next_scene_name: str, block_events_until_setup_finished: Optional[Sequence[pygame.event.EventType]]):
+        if block_events_until_setup_finished:
+            pygame.event.set_blocked(block_events_until_setup_finished)
         self.scenes[self.current_scene].cleanup()
         self.current_scene = next_scene_name
         self.scenes[self.current_scene].setup()
+        if block_events_until_setup_finished:
+            pygame.event.set_allowed(block_events_until_setup_finished)
 
     def handle_event(self, event: pygame.event.Event):
         self.scenes[self.current_scene].handle_event(event)

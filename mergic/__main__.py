@@ -73,7 +73,6 @@ class SoundTestScene(Scene):
         menucursor.set_surface(self.font.render("♪")[0])
         self.menuui = MenuUI(menu, self.font, menucursor)
         pygame.key.set_repeat(111, 111)
-        pygame.event.set_allowed(pygame.KEYDOWN)
 
     def play_music(self):
         music_selection = self.menuui.menu.current_selection()[0]
@@ -92,7 +91,6 @@ class SoundTestScene(Scene):
                 self.menuui.menu.execute_current_selection()
 
     def update(self, dt):
-        print("hoo")
         self.screen.blit(self.menuui.render(), (0, 0))
 
 
@@ -110,7 +108,7 @@ class TestMenuScene(Scene):
         menucursor.set_render_position(MenuCursorRenderPosition.LEFT)
         self.menuui = MenuUI(menu, self.font, menucursor)
         pygame.key.set_repeat(111, 111)
-    
+
     def handle_event(self, event: Event):
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_UP:
@@ -133,8 +131,15 @@ class TitleScene(Scene):
         self.font.size = 12
         self.font.fgcolor = pygame.color.Color(255, 255, 255)
         menu = TextMenu()
-        menu.add_option("Sound Test", callback=lambda: self.change_scene("sound_test"))
-        menu.add_option("Exit", callback=lambda: pygame.event.post(pygame.event.Event(pygame.QUIT)))
+        menu.add_option(
+            "Sound Test",
+            callback=lambda: self.manager.change_scene(
+                "sound_test", block_events_until_setup_finished=pygame.KEYDOWN
+            ),
+        )
+        menu.add_option(
+            "Exit", callback=lambda: pygame.event.post(pygame.event.Event(pygame.QUIT))
+        )
         menucursor = MenuCursor()
         menucursor.set_surface(self.font.render("<")[0])
         self.menuui = MenuUI(menu, self.font, menucursor)
@@ -147,7 +152,6 @@ class TitleScene(Scene):
             if event.key == pygame.K_DOWN:
                 self.menuui.menu.selector_down()
             if event.key == pygame.K_SPACE:
-                pygame.event.set_blocked(pygame.KEYDOWN)
                 self.menuui.menu.execute_current_selection()
 
     def update(self, dt):
