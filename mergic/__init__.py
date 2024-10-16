@@ -433,7 +433,7 @@ class MenuUI:
                 cursor_space_attach_left = self.cursor.surface.get_width()
             if self.cursor.render_position == MenuUICursorStyle.ATTACH_RIGHT:
                 cursor_space_attach_right = self.cursor.surface.get_width()
-        if self.page_indicator_style:
+        if self.page_indicator_style == MenuUIPageIndicatorStyle.ATTACH_TOP:
             page_indicator_space_attach_top = self.font.size
         entire_surface = pygame.surface.Surface(
             (
