@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from enum import Enum, auto
 from math import log10
 from itertools import permutations
@@ -5,10 +6,17 @@ import pdb
 
 
 class AlchemicalElement(Enum):
+    VOID = auto()
     HEAT = auto()
     COLD = auto()
     LIGHT = auto()
     DARK = auto()
+
+@dataclass
+class Magic:
+    alchemical_element: AlchemicalElement
+    traits: set
+    strength: int
 
 
 def is_vampire_number(number: int) -> bool:
@@ -42,16 +50,18 @@ def is_vampire_number(number: int) -> bool:
     return False
 
 
-def magic(integer_spell: int):
-    spell_traits = set()
+def generate_magic(integer_spell: int, strength: int):
+    magic = Magic(AlchemicalElement.VOID, set(), 0)
+    if integer_spell > 0:
+        magic.alchemical_element
     if integer_spell % 2 == 0:
-        spell_traits.add("addition")
+        magic.traits.add("addition")
         if integer_spell % 5 == 0:
-            spell_traits.add("confusion")
+            magic.traits.add("confusion")
     if integer_spell % 2 != 0:
-        spell_traits.add("subtraction")
+        magic.traits.add("subtraction")
         if integer_spell % 1001 == 0:
-            spell_traits.add("temptation")
+            magic.traits.add("temptation")
     if is_vampire_number(integer_spell):
-        spell_traits.add("vampire")
-    return spell_traits
+        magic.traits.add("vampire")
+    return magic
