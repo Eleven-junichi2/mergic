@@ -5,6 +5,7 @@ from pathlib import Path
 import tomllib
 import json
 from typing import Iterable, Optional, Tuple
+import os
 
 import pygame
 from pygame.event import Event
@@ -25,18 +26,24 @@ from mergic import (
     AssetFinder,
     GameMap,
     ImageAtlas,
+    SceneManager,
+    Scene,
+    TextMenu,
+)
+from mergic.ui import (
     MenuUICursor,
     MenuUICursorStyle,
     MenuUIHighlightStyle,
     MenuUI,
     MenuUIPageIndicatorStyle,
-    SceneManager,
-    Scene,
-    TextMenu,
+    TextInputUI,
 )
 from mergic.calculation_tools import calc_center_pos
 from mergic.entities import Player
 
+# os.environ["SDL_IME_SHOW_UI"] = "1"
+# os.environ["SDL_HINT_IME_SHOW_UI"] = "1"
+os.environ["SDL_HINT_IME_SUPPORT_EXTENDED_TEXT"] = "1"
 
 FPS = 60
 
@@ -163,6 +170,12 @@ class TitleScene(Scene):
             ),
         )
         menu.add_option(
+            "Battle Emulator",
+            callback=lambda: self.manager.change_scene(
+                "battle_emulation", block_events_until_setup_finished=pygame.KEYDOWN
+            ),
+        )
+        menu.add_option(
             "Exit", callback=lambda: pygame.event.post(pygame.event.Event(pygame.QUIT))
         )
         menucursor = MenuUICursor()
@@ -182,8 +195,25 @@ class TitleScene(Scene):
         # )
         self.screen.blit(self.menuui.render(), (0, self.title_pos[1] // 2 + 1))
 
+
 class BattleEmulationScene(Scene):
-    pass
+    def setup(self):
+        self.font = asset_finder.load_font("font")
+        self.font.size = 12
+        # self.font.fgcolor = pygame.color.Color(255, 255, 255)
+        self.textinputui = TextInputUI(self.font, default_text="happy!")
+        self.textinputui.focus()
+        pygame.key.set_repeat(156, 44)
+
+    def handle_event(self, event: Event):
+        self.textinputui.handle_event(event)
+
+    def update(self, dt):
+        self.screen.fill((0, 0, 0))
+        self.screen.blit(
+            self.textinputui.render(),
+            (0, 0),
+        )
 
 
 class GameScene(Scene):

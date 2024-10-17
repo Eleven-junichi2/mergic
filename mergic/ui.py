@@ -1,4 +1,5 @@
 from enum import Enum, auto
+import os
 from typing import (
     Optional,
 )
@@ -188,9 +189,88 @@ class MenuUI:
         raise NotImplementedError
 
 
+class SDL_IME_SHOW_UI_isInactiveError(Exception):
+    def __init__(self, *args: object) -> None:
+        super().__init__(*args)
+
+
 class TextInputUI:
     def __init__(
         self,
         font: pygame.freetype.Font,
+        default_text: str = "",
+        row_size_count: int = 1,
+        column_size_count: Optional[int] = None,
     ):
         self.font = font
+        self.text = default_text
+        self.row_size_count = row_size_count
+        self.column_size_count = column_size_count
+        self.bgcolor: pygame.color.Color = pygame.color.Color(255, 255, 255)
+        self.is_focused = False
+        # self.isinput = False
+        self.editing_text = ""
+
+    def focus(self):
+        pygame.key.start_text_input()
+        self.is_focused = True
+
+    def display_IME_candidate_list(self, where_to_render: Optional[pygame.rect.Rect]):
+        if os.environ.get("SDL_IME_SHOW_UI", "0") == "0":
+            raise SDL_IME_SHOW_UI_isInactiveError(
+                "Enviroment variable 'SDL_IME_SHOW_UI' must be \"1\" to display IME candidate list. Please set it before Pygame initialization."
+            )
+        pygame.key.set_text_input_rect(where_to_render)
+
+    def unfocus(self):
+        pygame.key.stop_text_input()
+        self.is_focused = False
+
+    def render(self) -> pygame.surface.Surface:
+        lines = []
+        longest_line = ""
+        for line in self.text.splitlines():
+            lines.append(line)
+            longest_line = line if len(line) > len(longest_line) else longest_line
+        editing_text_display = self.editing_text+"…" if len(self.editing_text.encode()) > 29 else self.editing_text
+        editing_text_surface, editing_text_rect = self.font.render(
+            editing_text_display,
+            fgcolor=self.bgcolor,
+            bgcolor=pygame.color.Color(
+                self.bgcolor.r ^ 255, self.bgcolor.g ^ 255, self.bgcolor.b ^ 255
+            ),
+        )
+        longest_line_surface_width = self.font.get_rect(longest_line)[2]
+        if longest_line_surface_width < editing_text_rect.width:
+            longest_line_surface_width = editing_text_rect.width
+        self.text.splitlines()
+        entire_surface = pygame.surface.Surface(
+            (longest_line_surface_width, self.font.size * self.row_size_count)
+        )
+        entire_surface.fill(self.bgcolor)
+        for line_num, text in enumerate(lines):
+            if line_num == self.row_size_count:
+                break
+            text_surface, text_rect = self.font.render(text)
+            entire_surface.blit(
+                text_surface,
+                (0, line_num * text_rect[1]),
+            )
+        # pygame.draw.rect(entire_surface, self.bgcolor, (0, 0, *editing_text_rect.size))
+        entire_surface.blit(editing_text_surface, (0, 0))
+        return entire_surface
+
+    def handle_event(self, event: pygame.event.Event):
+        if not self.is_focused:
+            return
+        if event.type == pygame.TEXTEDITING:
+            self.editing_text = event.text
+            print(
+                f"editing_text: {self.editing_text}, TEXTEDITING: text={event.text} start={event.start} length={event.length}"
+            )
+        if event.type == pygame.TEXTINPUT:
+            self.text += event.text
+            print(f"TEXTINPUT: text={event.text}")
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_BACKSPACE:
+                self.text = self.text[:-1]
