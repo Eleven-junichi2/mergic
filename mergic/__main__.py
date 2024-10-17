@@ -240,6 +240,7 @@ def main():
     screen_size = [640, 360]
     px_scale = 2
     display = pygame.display.set_mode(screen_size)
+    pygame.display.set_caption("Wizalen")
     screen = pygame.surface.Surface([size // px_scale for size in screen_size])
     scene_manager = SceneManager()
     scene_manager.add(TitleScene(screen), "title")
