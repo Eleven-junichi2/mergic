@@ -37,16 +37,19 @@ assetname_to_filepath ファイルパスに対するエイリアス名辞書。 
 
 キャラクターは複数のresistance（耐性）を持つ。対応する種類の属性のダメージを受けるとき、その耐性が正なら被ダメージ軽減、負なら被ダメージ増加。
 
-- hp
-  - max
-  - current
-- mp
-  - max
-  - current
-- physical_ability
-- armaments
-- resistances {alchemical_element: resistance_value}
+- name: str
+- tag: str
+- hp: int
+  - max: int
+  - current: int
+- mp: int
+  - max: int
+  - current: int
+- physical_ability: int
+- armaments {head: , left_hand:, right_hand: , foot: , body: , accessory: ,}
+- resistances {alchemical_element: resistance_value(float)}
 - spells {name: {integer_spell: int, default_strength: int, memo: str}}
+- status_effects set()
 
 ## 師弟システム
 
@@ -93,6 +96,7 @@ assetname_to_filepath ファイルパスに対するエイリアス名辞書。 
   - 選択時：
     - 今考えるのときは整数入力欄を表示
     - 込めるマナ：「」と入力させる
+    - 最後に対象を選択
 - 道具
 - 身を守る
 - 逃げる
@@ -105,20 +109,37 @@ assetname_to_filepath ファイルパスに対するエイリアス名辞書。 
 
 ### 計算
 
-被攻撃者をdefender、攻撃者をoffenderとする
+被対象者をtarget、行動者をactorとする
 commandに戦闘メニュー、もしくは敵AIによる行動選択を格納する。
 
 #### 戦闘行動：足掻く
 
-defender.hp -= rng(offender.physical_ability)
-offenderのarmamentをそれぞれを調べ、それが持つtraitによってdefenderもしくはoffenderに影響を与える。
+target.hp -= rng(actor.physical_ability) - rng(target.physical_ability)
+actorのarmamentをそれぞれを調べ、それが持つtraitによってtargetもしくはactorに影響を与える。
 
 #### 戦闘行動：呪文
 
 ##### 今考える
 
-入力欄から受け取った整数値をinteger_spellに設定
+入力欄から受け取った整数値をinteger_spellに設定。文字列が代入されたらそれを整数値に変換して行う。
 
 ##### 込めるマナ
 
 入力欄から受け取った整数値をstrengthに設定し、現在mpをstrengthで引く。今考える経由なら引く量は1.1倍
+
+##### スロットから選択
+
+選択した呪文のinteger_spellをinteger_spellに, default_strengthをstrengthにセットしてgenerate_magicを実行。
+返されたMagic=actors_magicとする。
+
+if actors_magic.traits has addition:
+  effect_size = strength
+  for alchemical_element in actors_magic.alchemical_elements:
+    if target.registances has alchemical_element:
+      effect_size *= (1 - target.registances[alchemical_element])
+  target.hp += effect_size
+
+if actors_magic.traits has confusion:
+  target.status_effects.add(confusion)
+
+といった具合。
