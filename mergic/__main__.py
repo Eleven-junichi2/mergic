@@ -27,7 +27,7 @@ from mergic import (
     ImageAtlas,
     MenuUICursor,
     MenuUICursorStyle,
-    MenuHighlightStyle,
+    MenuUIHighlightStyle,
     MenuUI,
     MenuUIPageIndicatorStyle,
     SceneManager,
@@ -89,7 +89,7 @@ class SoundTestScene(Scene):
             menu,
             self.font,
             menucursor,
-            highlight_style=MenuHighlightStyle(
+            highlight_style=MenuUIHighlightStyle(
                 fgcolor=pygame.color.Color(255, 255, 255)
             ),
             max_display_options=6,
@@ -182,6 +182,9 @@ class TitleScene(Scene):
         # )
         self.screen.blit(self.menuui.render(), (0, self.title_pos[1] // 2 + 1))
 
+class BattleEmulationScene(Scene):
+    pass
+
 
 class GameScene(Scene):
     def setup(self):
@@ -247,6 +250,7 @@ def main():
     scene_manager.add(SoundTestScene(screen), "sound_test")
     scene_manager.add(TestMenuScene(screen), "test_menu")
     scene_manager.add(GameScene(screen), "game")
+    scene_manager.add(BattleEmulationScene(screen), "battle_emulation")
     running = True
     dt = 0
     while running:
