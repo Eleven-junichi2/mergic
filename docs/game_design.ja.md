@@ -46,7 +46,7 @@ assetname_to_filepath ファイルパスに対するエイリアス名辞書。 
 - physical_ability
 - armaments
 - resistances {alchemical_element: resistance_value}
-- spells {name: {integer_spell: int, strength: int, memo: str}}
+- spells {name: {integer_spell: int, default_strength: int, memo: str}}
 
 ## 戦闘
 
