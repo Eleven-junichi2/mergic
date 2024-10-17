@@ -324,4 +324,5 @@ class TextMenu:
         return list(self.options.items())[self.selector]
 
     def execute_current_selection(self):
-        return self.current_selection()[1]["callback"]()
+        if callback := self.current_selection()[1]["callback"]:
+            return callback()

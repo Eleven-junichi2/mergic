@@ -172,7 +172,8 @@ class TitleScene(Scene):
         menu.add_option(
             "Battle Emulator",
             callback=lambda: self.manager.change_scene(
-                "battle_emulation", block_events_until_setup_finished=(pygame.KEYDOWN, pygame.TEXTINPUT)
+                "battle_emulation",
+                block_events_until_setup_finished=(pygame.KEYDOWN, pygame.TEXTINPUT),
             ),
         )
         menu.add_option(
@@ -201,18 +202,53 @@ class BattleEmulationScene(Scene):
         self.font = asset_finder.load_font("font")
         self.font.size = 12
         # self.font.fgcolor = pygame.color.Color(255, 255, 255)
-        self.textinputui = TextInputUI(self.font, min_width_from_halfwidthchar_count=20, max_line_length=10)
-        self.textinputui.focus()
+        self.textinputui = TextInputUI(
+            self.font, min_width_from_halfwidthchar_count=30, max_line_length=15
+        )
+        # self.textinputui.focus()
+        self.menufont = asset_finder.load_font("font")
+        self.menufont.size = 12
+        self.menufont.fgcolor = pygame.color.Color(200, 200, 222)
+        menu = TextMenu()
+        menu.add_option(
+            "テキスト入力をテスト", callback=lambda: (self.menuui.unfocus(),self.textinputui.focus())
+        )
+        menu.add_option(
+            "足掻く",
+        )
+        menu.add_option("呪文")
+        menu.add_option(
+            "道具",
+        )
+        menu.add_option(
+            "身を守る",
+        )
+        menu.add_option(
+            "逃げる",
+            callback=lambda: self.manager.change_scene("title", pygame.KEYDOWN),
+        )
+        self.menuui = MenuUI(
+            menu,
+            self.menufont,
+            MenuUICursor(self.menufont.render("<")[0]),
+            MenuUIHighlightStyle(fgcolor=pygame.color.Color(255, 255, 255)),
+        )
+        self.menuui.focus()
         pygame.key.set_repeat(156, 44)
 
     def handle_event(self, event: Event):
         self.textinputui.handle_event(event)
+        self.menuui.handle_event(event)
 
     def update(self, dt):
         self.screen.fill((0, 0, 0))
         self.screen.blit(
             self.textinputui.render(),
             (0, 0),
+        )
+        self.screen.blit(
+            self.menuui.render(),
+            (0, 32),
         )
 
 

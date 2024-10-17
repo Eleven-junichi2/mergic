@@ -25,9 +25,9 @@ class MenuUICursorStyle(Enum):
 
 
 class MenuUICursor:
-    def __init__(self):
-        self.surface = None
-        self.render_position = MenuUICursorStyle.ATTACH_RIGHT
+    def __init__(self, surface: Optional[pygame.surface.Surface] = None, render_position: MenuUICursorStyle = MenuUICursorStyle.ATTACH_RIGHT):
+        self.surface = surface
+        self.render_position = render_position
 
     def set_surface(self, surface: pygame.surface.Surface):
         self.surface = surface
@@ -202,17 +202,20 @@ class TextInputUI:
         min_width_from_halfwidthchar_count: Optional[int] = None,
         max_line_length: Optional[int] = None,
         max_line_count: int = 1,
-        width: Optional[int] = None,
-        height: Optional[int] = None,
+        fixed_width: Optional[int] = None,
+        fixed_height: Optional[int] = None,
+        bgcolor: Optional[pygame.color.Color] = None,
+        bgcolor_on_focus: Optional[pygame.color.Color] = None,
     ):
         self.font = font
         self.text = default_text
         self.max_line_count = max_line_count
         self.min_width_from_halfwidthchar_count = min_width_from_halfwidthchar_count
         self.max_line_length = max_line_length
-        self.width = width
-        self.height = height
-        self.bgcolor: pygame.color.Color = pygame.color.Color(255, 255, 255)
+        self.fixed_width = fixed_width
+        self.fixed_height = fixed_height
+        self.bgcolor: pygame.color.Color = bgcolor if bgcolor else pygame.color.Color(222, 222, 222)
+        self.bgcolor_on_focus: pygame.color.Color = bgcolor_on_focus if bgcolor_on_focus else pygame.color.Color(255, 255, 255)
         self.is_focused = False
         self.editing_text = ""
 
@@ -232,6 +235,7 @@ class TextInputUI:
         self.is_focused = False
 
     def render(self) -> pygame.surface.Surface:
+        bgcolor = self.bgcolor_on_focus if self.is_focused else self.bgcolor
         lines = []
         longest_line = ""
         for line in self.text.splitlines():
@@ -244,9 +248,9 @@ class TextInputUI:
         )
         editing_text_surface, editing_text_rect = self.font.render(
             editing_text_display,
-            fgcolor=self.bgcolor,
+            fgcolor=bgcolor,
             bgcolor=pygame.color.Color(
-                self.bgcolor.r ^ 255, self.bgcolor.g ^ 255, self.bgcolor.b ^ 255
+                bgcolor.r ^ 255, bgcolor.g ^ 255, bgcolor.b ^ 255
             ),
         )
         longest_line_surface_width = self.font.get_rect(longest_line)[2]
@@ -259,16 +263,14 @@ class TextInputUI:
                 )[2]
                 if longest_line_surface_width < min_width:
                     longest_line_surface_width = min_width
-        if self.width:
-            longest_line_surface_width = self.width
-        if self.height:
-            height = self.height
+        if self.fixed_width:
+            longest_line_surface_width = self.fixed_width
+        if self.fixed_height:
+            height = self.fixed_height
         else:
             height = self.font.size * self.max_line_count
-        entire_surface = pygame.surface.Surface(
-            (longest_line_surface_width, height)
-        )
-        entire_surface.fill(self.bgcolor)
+        entire_surface = pygame.surface.Surface((longest_line_surface_width, height))
+        entire_surface.fill(bgcolor)
         for line_num, text in enumerate(lines):
             if line_num == self.max_line_count:
                 break
@@ -277,8 +279,9 @@ class TextInputUI:
                 text_surface,
                 (0, line_num * text_rect[1]),
             )
-        # pygame.draw.rect(entire_surface, self.bgcolor, (0, 0, *editing_text_rect.size))
+        # pygame.draw.rect(entire_surface, bgcolor, (0, 0, *editing_text_rect.size))
         entire_surface.blit(editing_text_surface, (0, 0))
+        self.surface_cache = entire_surface
         return entire_surface
 
     def handle_event(self, event: pygame.event.Event):
