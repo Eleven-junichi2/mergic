@@ -172,7 +172,7 @@ class TitleScene(Scene):
         menu.add_option(
             "Battle Emulator",
             callback=lambda: self.manager.change_scene(
-                "battle_emulation", block_events_until_setup_finished=pygame.KEYDOWN
+                "battle_emulation", block_events_until_setup_finished=(pygame.KEYDOWN, pygame.TEXTINPUT)
             ),
         )
         menu.add_option(
@@ -201,7 +201,7 @@ class BattleEmulationScene(Scene):
         self.font = asset_finder.load_font("font")
         self.font.size = 12
         # self.font.fgcolor = pygame.color.Color(255, 255, 255)
-        self.textinputui = TextInputUI(self.font, default_text="happy!")
+        self.textinputui = TextInputUI(self.font, min_width_from_halfwidthchar_count=20, max_line_length=10)
         self.textinputui.focus()
         pygame.key.set_repeat(156, 44)
 

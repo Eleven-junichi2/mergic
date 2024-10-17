@@ -199,16 +199,21 @@ class TextInputUI:
         self,
         font: pygame.freetype.Font,
         default_text: str = "",
-        row_size_count: int = 1,
-        column_size_count: Optional[int] = None,
+        min_width_from_halfwidthchar_count: Optional[int] = None,
+        max_line_length: Optional[int] = None,
+        max_line_count: int = 1,
+        width: Optional[int] = None,
+        height: Optional[int] = None,
     ):
         self.font = font
         self.text = default_text
-        self.row_size_count = row_size_count
-        self.column_size_count = column_size_count
+        self.max_line_count = max_line_count
+        self.min_width_from_halfwidthchar_count = min_width_from_halfwidthchar_count
+        self.max_line_length = max_line_length
+        self.width = width
+        self.height = height
         self.bgcolor: pygame.color.Color = pygame.color.Color(255, 255, 255)
         self.is_focused = False
-        # self.isinput = False
         self.editing_text = ""
 
     def focus(self):
@@ -232,7 +237,11 @@ class TextInputUI:
         for line in self.text.splitlines():
             lines.append(line)
             longest_line = line if len(line) > len(longest_line) else longest_line
-        editing_text_display = self.editing_text+"…" if len(self.editing_text.encode()) > 29 else self.editing_text
+        editing_text_display = (
+            self.editing_text + "…"
+            if len(self.editing_text.encode()) > 29
+            else self.editing_text
+        )
         editing_text_surface, editing_text_rect = self.font.render(
             editing_text_display,
             fgcolor=self.bgcolor,
@@ -243,13 +252,25 @@ class TextInputUI:
         longest_line_surface_width = self.font.get_rect(longest_line)[2]
         if longest_line_surface_width < editing_text_rect.width:
             longest_line_surface_width = editing_text_rect.width
-        self.text.splitlines()
+        else:
+            if self.min_width_from_halfwidthchar_count:
+                min_width = self.font.get_rect(
+                    " " * self.min_width_from_halfwidthchar_count
+                )[2]
+                if longest_line_surface_width < min_width:
+                    longest_line_surface_width = min_width
+        if self.width:
+            longest_line_surface_width = self.width
+        if self.height:
+            height = self.height
+        else:
+            height = self.font.size * self.max_line_count
         entire_surface = pygame.surface.Surface(
-            (longest_line_surface_width, self.font.size * self.row_size_count)
+            (longest_line_surface_width, height)
         )
         entire_surface.fill(self.bgcolor)
         for line_num, text in enumerate(lines):
-            if line_num == self.row_size_count:
+            if line_num == self.max_line_count:
                 break
             text_surface, text_rect = self.font.render(text)
             entire_surface.blit(
@@ -266,11 +287,15 @@ class TextInputUI:
         if event.type == pygame.TEXTEDITING:
             self.editing_text = event.text
             print(
-                f"editing_text: {self.editing_text}, TEXTEDITING: text={event.text} start={event.start} length={event.length}"
+                f"editing_text='{self.editing_text}', TEXTEDITING: text={event.text} start={event.start} length={event.length}"
             )
         if event.type == pygame.TEXTINPUT:
+            print(f"beforeedit: self.text='{self.text}' TEXTINPUT: text='{event.text}'")
             self.text += event.text
-            print(f"TEXTINPUT: text={event.text}")
+            if self.max_line_length:
+                self.text = self.text[: self.max_line_length]
+            # print(f"afteredit: self.text='{self.text}' TEXTINPUT: text='{event.text}'")
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_BACKSPACE:
                 self.text = self.text[:-1]
+                # print(f"afteredit: self.text='{self.text}'")
