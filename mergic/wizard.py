@@ -12,15 +12,16 @@ class AlchemicalElement(Enum):
     LIGHT = auto()
     DARK = auto()
 
+
 @dataclass
 class Magic:
-    alchemical_element: AlchemicalElement
+    alchemical_elements: set[AlchemicalElement]
     traits: set
     strength: int
 
 
 def is_vampire_number(number: int) -> bool:
-    # TODO: improve algorithm
+    """TODO: improve algorithm"""
     digit_length = int(log10(number)) + 1
     if digit_length % 2 != 0:
         return False
@@ -50,18 +51,75 @@ def is_vampire_number(number: int) -> bool:
     return False
 
 
+def is_strobogrammatic_number(
+    number: int, symmetrical_nums=(0, 1, 8), symmetrical_pairs=((6, 9),)
+):
+    """
+    TODO:
+    - Stop the iteration when the middle digit is reached, as the check is complete.
+    - Improve the algorithm
+    """
+    if number == 0:
+        digit_length = 1
+    else:
+        digit_length = int(log10(number)) + 1
+    digit_list = []
+    for digit in range(digit_length):
+        digit_list.append((number // 10**digit) % 10)
+
+    for i, number in enumerate(digit_list):
+        symmetrical_pair_found = False
+        if number in symmetrical_nums:
+            if digit_list[-i - 1] == number:
+                symmetrical_pair_found = True
+                continue
+            else:
+                return False
+        for symmetrical_pair in symmetrical_pairs:
+            if number == symmetrical_pair[0]:
+                if digit_list[-i - 1] == symmetrical_pair[1]:
+                    symmetrical_pair_found = True
+                    break
+                else:
+                    return False
+            elif number == symmetrical_pair[1]:
+                if digit_list[-i - 1] == symmetrical_pair[0]:
+                    symmetrical_pair_found = True
+                    break
+                else:
+                    return False
+        if not symmetrical_pair_found:
+            return False
+    return True
+
+
 def generate_magic(integer_spell: int, strength: int):
     magic = Magic(AlchemicalElement.VOID, set(), 0)
     if integer_spell > 0:
-        magic.alchemical_element
+        magic.alchemical_elements.add(AlchemicalElement.LIGHT)
+    if integer_spell < 0:
+        magic.alchemical_elements.add(AlchemicalElement.DARK)
     if integer_spell % 2 == 0:
         magic.traits.add("addition")
+        if integer_spell > 0:
+            magic.alchemical_elements.add(AlchemicalElement.HEAT)
+        if integer_spell < 0:
+            magic.alchemical_elements.add(AlchemicalElement.COLD)
         if integer_spell % 5 == 0:
             magic.traits.add("confusion")
     if integer_spell % 2 != 0:
         magic.traits.add("subtraction")
+        if integer_spell > 0:
+            magic.alchemical_elements.add(AlchemicalElement.COLD)
+        if integer_spell < 0:
+            magic.alchemical_elements.add(AlchemicalElement.HEAT)
         if integer_spell % 1001 == 0:
             magic.traits.add("temptation")
     if is_vampire_number(integer_spell):
         magic.traits.add("vampire")
+    if is_strobogrammatic_number(integer_spell):
+        magic.traits.add("drowsiness")
+    if integer_spell == 0:
+        magic.alchemical_elements.add(AlchemicalElement.VOID)
+    magic.strength = strength
     return magic
