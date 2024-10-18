@@ -84,9 +84,9 @@ def main():
                 surface=pygame.surface.Surface((32, 32)),
                 vel=Vector2(),
                 actions=ActionController(),
-                hp=HP(max_=random.randint(44, 88)),
-                mana=Mana(max_=random.randint(156, 312)),
-                physical_ability=random.randint(3, 9),
+                hp=HP(max_=random.randint(11, 22)),
+                mana=Mana(max_=random.randint(39, 78)),
+                physical_ability=random.randint(5, 8),
                 friendly_factions={"enemy"},
                 hostile_factions={"player"},
                 friendly_mob_types=set,
@@ -135,6 +135,8 @@ def main():
     running_battle = True
     while running_battle:
         for dead_entity in world.dead_entity_buffer:
+            if isinstance(dead_entity, HasName):
+                print(dead_entity.name, "（戦場から削除！）")
             units_on_battlefield.remove(dead_entity)
         world.do_reserved_deletions()
         if (
@@ -149,6 +151,7 @@ def main():
         ):
             print("<<<GAMEOVER>>>")
             running_battle = False
+            break
         elif (
             len(
                 [
@@ -161,6 +164,7 @@ def main():
         ):
             print("<<<YOU WON>>>")
             running_battle = False
+            break
         for unit in units_on_battlefield:
             print("-")
             for unit_ in units_on_battlefield:
@@ -249,11 +253,19 @@ def main():
                         )
             for battlecommand in battlecommand_queue:
                 actor = battlecommand["actor"]
-                if actor.hp == 0:
+                target = battlecommand["target"]
+                if actor.hp.current == 0:
+                    continue
+                if target.hp.current == 0:
                     continue
                 match battlecommand["type"]:
+                    case "guard":
+                        print(f"{actor.name}は身を守っている！未実装")
+                        # actor.status_effects.append({"heat_resistance": random.random()})
+                        # actor.status_effects.append({"cold_resistance": random.random()})
+                        # actor.status_effects.append({"light_resistance": random.random()})
+                        # actor.status_effects.append({"dark_resistance": random.random()})
                     case "close_combat":
-                        target = battlecommand["target"]
                         print(f"{actor.name}の攻撃！")
                         damage = random.randint(
                             0, actor.physical_ability
@@ -264,14 +276,12 @@ def main():
                                 print(
                                     f"{actor.name}は自身を傷つけようとしたが威力が足りなかった！"
                                 )
-                            if target.physical_ability > actor.physical_ability:
+                            elif target.physical_ability > actor.physical_ability:
                                 print(f"{target.name}は攻撃を弾いた！")
                             elif target.physical_ability < actor.physical_ability:
                                 print(f"{target.name}は攻撃を躱した！")
                             elif target.physical_ability == actor.physical_ability:
-                                print(
-                                    f"{target.name}と{actor.name}は互角の戦いを繰り広げる！"
-                                )
+                                print(f"{target.name}は攻撃を受け止めた！")
                             damage = 0
                         else:
                             if actor == target:
