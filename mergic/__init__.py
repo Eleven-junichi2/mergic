@@ -161,11 +161,18 @@ class ECS:
     def entities_for_components[T](
         self, *component_types: type[T]
     ) -> Generator[T, Any, None]:
-        # fix this to be more efficient
-        for component_type in component_types:
-            for entity_type in self.entities.keys():
-                if component_type in entity_type.__mro__:
-                    yield from self.entities_for_type(entity_type)
+        """TODO: fix this to be more efficient"""
+        entities = deque()
+        for entity_type in self.entities.keys():
+            if set(component_types).issubset(entity_type.__mro__):
+                entities.extend(self.entities_for_type(entity_type))
+        yield from entities
+        # entities = set()
+        # for component_type in component_types:
+        #     for entity_type in self.entities.keys():
+        #         if component_type in entity_type.__mro__:
+        #             entities.add(*self.entities_for_type(entity_type))
+        # yield from entities
 
 
 class ActionController:

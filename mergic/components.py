@@ -28,6 +28,10 @@ class Mana:
     def __post_init__(self):
         self.current = self.max_
 
+@dataclass
+class HasPhysicalAbility:
+    physical_ability: int
+
 
 @dataclass
 class HasHP:

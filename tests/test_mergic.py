@@ -23,6 +23,10 @@ class DummyEntity(DummyComponent):
 class DummyEntity2(DummyComponent, DummyComponent2):
     pass
 
+@entityclass
+class DummyEntity3(DummyComponent, DummyComponent2):
+    pass
+
 
 class TestECS(unittest.TestCase):
     def test_add_entity(self):
@@ -62,8 +66,19 @@ class TestECS(unittest.TestCase):
         world.add(DummyEntity2())
         for entity in world.entities_for_components(DummyComponent):
             self.assertEqual(entity.__class__ in (DummyEntity, DummyEntity2), True)
+        self.assertEqual(len(list(world.entities_for_components(DummyComponent))), 2)
         for entity in world.entities_for_components(DummyComponent2):
             self.assertEqual(entity.__class__, DummyEntity2)
+        self.assertEqual(len(list(world.entities_for_components(DummyComponent2))), 1)
+        for entity in world.entities_for_components(DummyComponent2, DummyComponent):
+            self.assertEqual(entity.__class__, DummyEntity2)
+        self.assertEqual(len(list(world.entities_for_components(DummyComponent2, DummyComponent))), 1)
+        world.add(DummyEntity2())
+        for entity in world.entities_for_components(DummyComponent2, DummyComponent):
+            self.assertEqual(entity.__class__, DummyEntity2)
+        self.assertEqual(len(list(world.entities_for_components(DummyComponent2, DummyComponent))), 2)
+        world.add(DummyEntity3())
+        self.assertEqual(len(list(world.entities_for_components(DummyComponent2, DummyComponent))), 3)
 
 
 class TestGameMap(unittest.TestCase):

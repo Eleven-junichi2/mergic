@@ -1,7 +1,5 @@
 from mergic import entityclass
 from mergic.components import (
-    AbleToHaveMentor,
-    AbleToHaveStudent,
     HasActions,
     HasCoordinate,
     HasHP,
@@ -10,6 +8,9 @@ from mergic.components import (
     HasVelocity,
     HasAffiliation,
     HasName,
+    HasPhysicalAbility,
+    AbleToHaveMentor,
+    AbleToHaveStudent,
 )
 
 
@@ -22,6 +23,7 @@ class Player(
     HasActions,
     HasHP,
     HasMana,
+    HasPhysicalAbility,
     HasAffiliation,
     AbleToHaveStudent,
     AbleToHaveMentor,
@@ -38,6 +40,7 @@ class Mob(
     HasActions,
     HasHP,
     HasMana,
+    HasPhysicalAbility,
     HasAffiliation,
 ):
     pass
