@@ -93,7 +93,7 @@ def is_strobogrammatic_number(
     return True
 
 
-def generate_magic(integer_spell: int, strength: int):
+def generate_magic(integer_spell: int, strength: int) -> Magic:
     magic = Magic(AlchemicalElement.VOID, set(), 0)
     if integer_spell > 0:
         magic.alchemical_elements.add(AlchemicalElement.LIGHT)

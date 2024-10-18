@@ -12,12 +12,10 @@ from pygame.event import Event
 from pygame.math import Vector2
 
 from mergic.components import (
-    Actions,
-    Coordinate,
-    PygameSurface,
-    TileCoordinate,
-    TileVelocity,
-    Velocity,
+    HasActions,
+    HasCoordinate,
+    HasSurface,
+    HasVelocity,
 )
 
 from mergic import (
@@ -271,7 +269,7 @@ class GameScene(Scene):
         self.screen.fill((0, 0, 0))
         scancode_map = pygame.key.get_pressed()
         for entity in self.world.entities_for_components(
-            Coordinate, Velocity, PygameSurface, Actions
+            HasCoordinate, HasVelocity, HasSurface, HasActions
         ):
             if isinstance(entity, Player):
                 vel_x = scancode_map[pygame.K_RIGHT] - scancode_map[pygame.K_LEFT]

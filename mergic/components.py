@@ -1,34 +1,82 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from typing import Optional
 
 import pygame
 
 import mergic
 
-@dataclass
-class Hp:
-    max_hp: int
-    hp: int = 0
 
 @dataclass
-class PygameSurface:
+class HasAffiliation:
+    affiliation: str
+
+
+@dataclass
+class HP:
+    max_: int
+    current: int = field(init=False)
+
+    def __post_init__(self):
+        self.current = self.max_
+
+
+@dataclass
+class Mana:
+    max_: int
+    current: int = field(init=False)
+
+    def __post_init__(self):
+        self.current = self.max_
+
+
+@dataclass
+class HasHP:
+    hp: HP
+
+
+@dataclass
+class HasMana:
+    mana: Mana
+
+@dataclass
+class HasName:
+    name: str
+
+@dataclass
+class AbleToHaveStudent:
+    student: Optional[str]
+
+
+@dataclass
+class AbleToHaveMentor:
+    mentor: Optional[str]
+
+
+@dataclass
+class HasSurface:
     surface: pygame.Surface
 
+
 @dataclass
-class Coordinate:
+class HasCoordinate:
     pos: pygame.math.Vector2
 
+
 @dataclass
-class TileCoordinate:
+class HasTileCoordinate:
     tile_pos: pygame.math.Vector2
 
+
 @dataclass
-class Velocity:
+class HasVelocity:
     vel: pygame.math.Vector2
 
-@dataclass
-class TileVelocity:
-    tile_vel: pygame.math.Vector2
 
 @dataclass
-class Actions:
+class HasTileVelocity:
+    tile_vel: pygame.math.Vector2
+
+
+@dataclass
+class HasActions:
     actions: mergic.ActionController

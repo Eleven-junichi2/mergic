@@ -302,6 +302,10 @@ class TextMenu:
 
     def selector_down(self):
         self.selector = (self.selector + 1) % len(self.options)
+    
+    def selector_point_at(self, index: int):
+        self.selector = index
+
 
     def add_option(
         self,
