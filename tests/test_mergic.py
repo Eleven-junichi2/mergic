@@ -79,6 +79,8 @@ class TestECS(unittest.TestCase):
         self.assertEqual(len(list(world.entities_for_components(DummyComponent2, DummyComponent))), 2)
         world.add(DummyEntity3())
         self.assertEqual(len(list(world.entities_for_components(DummyComponent2, DummyComponent))), 3)
+        for entity in world.entities_for_components(DummyComponent):
+            self.assertEqual(entity.__class__ in (DummyEntity, DummyEntity2, DummyEntity3), True)
 
 
 class TestGameMap(unittest.TestCase):

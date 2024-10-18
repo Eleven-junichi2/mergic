@@ -1,14 +1,10 @@
 from dataclasses import dataclass, field
-from typing import Optional
+from typing import Optional, TypedDict
 
 import pygame
 
+from mergic.wizard import SpellDatabase, Mana
 import mergic
-
-
-@dataclass
-class HasAffiliation:
-    affiliation: str
 
 
 @dataclass
@@ -21,12 +17,34 @@ class HP:
 
 
 @dataclass
-class Mana:
-    max_: int
-    current: int = field(init=False)
+class HasMobType:
+    mob_type: str
 
-    def __post_init__(self):
-        self.current = self.max_
+
+@dataclass
+class HasHostileFactions:
+    hostile_factions: set[str]
+
+
+@dataclass
+class HasFriendlyFactions:
+    friendly_factions: set[str]
+
+
+@dataclass
+class HasHostileMobTypes:
+    hostile_mob_types: set[str]
+
+
+@dataclass
+class HasFriendlyMobTypes:
+    friendly_mob_types: set[str]
+
+
+@dataclass
+class HasSpellDatabase:
+    spell_database: SpellDatabase
+
 
 @dataclass
 class HasPhysicalAbility:
@@ -42,9 +60,11 @@ class HasHP:
 class HasMana:
     mana: Mana
 
+
 @dataclass
 class HasName:
     name: str
+
 
 @dataclass
 class AbleToHaveStudent:

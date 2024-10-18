@@ -6,16 +6,22 @@ from mergic.components import (
     HasMana,
     HasSurface,
     HasVelocity,
-    HasAffiliation,
     HasName,
     HasPhysicalAbility,
     AbleToHaveMentor,
     AbleToHaveStudent,
+    HasMobType,
+    HasHostileFactions,
+    HasFriendlyFactions,
+    HasHostileMobTypes,
+    HasFriendlyMobTypes,
+    HasSpellDatabase,
 )
 
 
 @entityclass
 class Player(
+    HasMobType,
     HasName,
     HasCoordinate,
     HasSurface,
@@ -24,7 +30,11 @@ class Player(
     HasHP,
     HasMana,
     HasPhysicalAbility,
-    HasAffiliation,
+    HasHostileFactions,
+    HasFriendlyFactions,
+    HasHostileMobTypes,
+    HasFriendlyMobTypes,
+    HasSpellDatabase,
     AbleToHaveStudent,
     AbleToHaveMentor,
 ):
@@ -33,6 +43,7 @@ class Player(
 
 @entityclass
 class Mob(
+    HasMobType,
     HasName,
     HasCoordinate,
     HasSurface,
@@ -41,6 +52,10 @@ class Mob(
     HasHP,
     HasMana,
     HasPhysicalAbility,
-    HasAffiliation,
+    HasHostileFactions,
+    HasFriendlyFactions,
+    HasSpellDatabase,
+    HasHostileMobTypes,
+    HasFriendlyMobTypes,
 ):
     pass

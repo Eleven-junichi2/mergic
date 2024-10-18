@@ -29,7 +29,6 @@ def main():
     menu.add_option("道具", key="item")
     menu.add_option("身を守る", key="guard")
     menu.add_option("逃げる", key="escape")
-    # game_msg = "番号を入力して選択"
     PROMPT_SYMBOL = ">"
 
     player_master = Player(

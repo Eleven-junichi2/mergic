@@ -148,7 +148,8 @@ class ECS:
         self.entities[entity.__class__].remove(entity)
 
     def reserve_to_delete(self, entity):
-        self.dead_entity_buffer.append(entity)
+        if entity not in self.dead_entity_buffer:
+            self.dead_entity_buffer.append(entity)
 
     def do_reserved_deletions(self):
         for entity in self.dead_entity_buffer:
@@ -309,10 +310,9 @@ class TextMenu:
 
     def selector_down(self):
         self.selector = (self.selector + 1) % len(self.options)
-    
+
     def selector_point_at(self, index: int):
         self.selector = index
-
 
     def add_option(
         self,

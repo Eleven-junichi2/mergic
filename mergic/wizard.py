@@ -1,8 +1,8 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum, auto
 from math import log10
 from itertools import permutations
-import pdb
+from typing import TypedDict
 
 
 class AlchemicalElement(Enum):
@@ -18,6 +18,25 @@ class Magic:
     alchemical_elements: set[AlchemicalElement]
     traits: set
     strength: int
+
+
+@dataclass
+class Mana:
+    max_: int
+    current: int = field(init=False)
+
+    def __post_init__(self):
+        self.current = self.max_
+
+
+class SpellRecord(TypedDict):
+    ingeger_spell: int
+    default_strength: int
+    memo: str
+
+
+class SpellDatabase(TypedDict):
+    name: dict[str, SpellRecord]
 
 
 def is_vampire_number(number: int) -> bool:
