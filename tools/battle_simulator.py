@@ -20,8 +20,9 @@ from mergic.components import (
     HasMobType,
     HasName,
     HasPhysicalAbility,
+    HasSpellDatabase
 )
-from mergic.wizard import Mana, SpellDatabase
+from mergic.wizard import Mana, SpellDatabase, SpellRecord
 from mergic.entities import Player, Mob
 
 
@@ -104,6 +105,7 @@ def main():
                 HasPhysicalAbility,
                 HasFriendlyFactions,
                 HasHostileFactions,
+                HasSpellDatabase
             )
         ),
         key=lambda entity: entity.physical_ability,
@@ -188,6 +190,28 @@ def main():
                         case "escape":
                             running_battle = False
                             break
+                        case "spell":
+                            spells_menu = TextMenu()
+                            spells_menu.add_option("cancel", key="cancel", tag="menu")
+                            spells_menu.add_option("improvise spell", key="improvise_spell")
+                            for spell_name in unit.spell_database.keys():
+                                spells_menu.add_option(
+                                    spell_name,
+                                    tag="spell",
+                                )
+                            while True:
+                                try:
+                                    command = int(
+                                            input("番号を入力して選択" + PROMPT_SYMBOL)
+                                        )
+                                    spells_menu.selector_point_at(command)
+                                except ValueError:
+                                    continue
+                                except IndexError:
+                                    continue
+                                match spells_menu.current_selection()[0]:
+                                    case "cancel":
+                                        break
                         case "close_combat":
                             targets_menu = TextMenu()
                             targets_menu.add_option("cancel", key="cancel", tag="menu")

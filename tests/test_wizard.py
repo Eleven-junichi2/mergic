@@ -11,23 +11,23 @@ class TestWizard(unittest.TestCase):
                     "addition",
                 ]
             ),
-            wizard.magic(2),
+            wizard.generate_magic(2, 1).traits,
         )
         self.assertSetEqual(
-            set(
-                [
-                    "subtraction",
-                ]
-            ),
-            wizard.magic(1),
-        )
-        self.assertSetEqual(
-            set(["subtraction", "temptation"]),
-            wizard.magic(1001),
+            set(["subtraction", "temptation", "drowsiness"]),
+            wizard.generate_magic(1001, 1).traits,
         )
         self.assertSetEqual(
             set(["addition", "confusion"]),
-            wizard.magic(10),
+            wizard.generate_magic(10, 1).traits,
+        )
+        print(wizard.generate_magic(1, 1).traits)
+        self.assertSetEqual(
+            {
+                "drowsiness",
+                "subtraction",
+            },
+            wizard.generate_magic(1, 1).traits,
         )
 
     def test_vampire_number(self):
@@ -58,7 +58,7 @@ class TestWizard(unittest.TestCase):
             125460,
             125500,
         ]
-        non_vampiric_numbers = [1, 123, 1590]
+        non_vampiric_numbers = [0, 1, 123, 1590]
         for testcase in vampire_numbers:
             self.assertTrue(
                 wizard.is_vampire_number(testcase), f"testcase num: {testcase}"
@@ -66,6 +66,18 @@ class TestWizard(unittest.TestCase):
         for testcase in non_vampiric_numbers:
             self.assertFalse(
                 wizard.is_vampire_number(testcase), f"testcase num: {testcase}"
+            )
+
+    def test_prime_number(self):
+        non_prime_numbers = [0, 6, 10, 8]
+        for testcase in non_prime_numbers:
+            self.assertFalse(
+                wizard.is_prime_number(testcase), f"testcase num: {testcase}"
+            )
+        prime_numbers = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97]
+        for testcase in prime_numbers:
+            self.assertTrue(
+                wizard.is_prime_number(testcase), f"testcase num: {testcase}"
             )
 
     def test_strobogrammatic_number(self):
@@ -162,12 +174,46 @@ class TestWizard(unittest.TestCase):
             55,
             56,
             57,
-            58
+            58,
         ]
-        for testcase, errorcase  in zip(strobogrammatic_numbers, non_strobogrammatic_numbers):
+        for testcase, errorcase in zip(
+            strobogrammatic_numbers, non_strobogrammatic_numbers
+        ):
             self.assertTrue(
                 wizard.is_strobogrammatic_number(testcase), f"testcase num: {testcase}"
             )
             self.assertFalse(
-                wizard.is_strobogrammatic_number(errorcase), f"errorcase num: {errorcase}"
+                wizard.is_strobogrammatic_number(errorcase),
+                f"errorcase num: {errorcase}",
             )
+
+    def test_split_into_chunks(self):
+        collection_ = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+        self.assertEqual(
+            [[1, 2, 3, 4, 5], [6, 7, 8, 9, 10]],
+            [list(chunk) for chunk in wizard.split_into_chunks(collection_, 2)],
+        )
+        collection_ = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+        self.assertEqual(
+            [[1, 2, 3, 4, 5], [6, 7, 8, 9, 10, 11]],
+            [list(chunk) for chunk in wizard.split_into_chunks(collection_, 2)],
+        )
+        collection_ = [1, 2, 3, 4, 5, 6, 7]
+        self.assertEqual(
+            [[1, 2], [3, 4], [5, 6, 7]],
+            [list(chunk) for chunk in wizard.split_into_chunks(collection_, 3)],
+        )
+    
+    def test_split_number_into_digits(self):
+        self.assertEqual(
+            [[1, 2, 3], 3],
+            list(wizard.split_number_into_digits(123)),
+        )
+        self.assertEqual(
+            [[1, 0, 2, 3, 4], 5],
+            list(wizard.split_number_into_digits(10234)),
+        )
+        self.assertEqual(
+            [[1, 2, 3, 4, 5, 6, 7], 7],
+            list(wizard.split_number_into_digits(1234567)),
+        )
