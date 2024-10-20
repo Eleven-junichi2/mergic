@@ -20,9 +20,9 @@ from mergic.components import (
     HasMobType,
     HasName,
     HasPhysicalAbility,
-    HasSpellDatabase
+    HasSpellDatabase,
 )
-from mergic.wizard import Mana, SpellDatabase, SpellRecord
+from mergic.wizard import AlchemicalElement, Magic, Mana, SpellRecord, SpellTrait
 from mergic.entities import Player, Mob
 
 
@@ -36,26 +36,28 @@ def main():
     PROMPT_SYMBOL = ">"
 
     world = GameWorld()
-    world.add(
-        Player(
-            mob_type="player_master",
-            name="masterA",
-            pos=Vector2(),
-            surface=pygame.surface.Surface((32, 32)),
-            vel=Vector2(),
-            actions=ActionController(),
-            hp=HP(max_=22),
-            mana=Mana(max_=78),
-            physical_ability=7,
-            friendly_factions={"player"},
-            hostile_factions=set(),
-            friendly_mob_types=set(),
-            hostile_mob_types=set(),
-            spell_database=SpellDatabase(),
-            mentor=None,
-            student="apprenticeA",
-        )
+    player = Player(
+        mob_type="player_master",
+        name="masterA",
+        pos=Vector2(),
+        surface=pygame.surface.Surface((32, 32)),
+        vel=Vector2(),
+        actions=ActionController(),
+        hp=HP(max_=22),
+        mana=Mana(max_=78),
+        physical_ability=7,
+        friendly_factions={"player"},
+        hostile_factions=set(),
+        friendly_mob_types=set(),
+        hostile_mob_types=set(),
+        spell_database={},
+        mentor=None,
+        student="apprenticeA",
     )
+    for element in AlchemicalElement:
+        magic = Magic({element}, {}, random.randint(1, 22))
+        player.spell_database[wizard.auto_name(magic, "ja")] = SpellRecord(magic=magic)
+    world.add(player)
     world.add(
         Player(
             mob_type="player_apprentice",
@@ -71,7 +73,7 @@ def main():
             hostile_factions={"enemy"},
             friendly_mob_types=set(),
             hostile_mob_types=set(),
-            spell_database=SpellDatabase(),
+            spell_database={},
             mentor="masterA",
             student=None,
         )
@@ -92,7 +94,7 @@ def main():
                 hostile_factions={"player"},
                 friendly_mob_types=set,
                 hostile_mob_types=set(),
-                spell_database=SpellDatabase(),
+                spell_database={},
             )
         )
     units_on_battlefield = sorted(
@@ -105,7 +107,7 @@ def main():
                 HasPhysicalAbility,
                 HasFriendlyFactions,
                 HasHostileFactions,
-                HasSpellDatabase
+                HasSpellDatabase,
             )
         ),
         key=lambda entity: entity.physical_ability,
@@ -125,6 +127,7 @@ def main():
         dict[
             str,
             str
+            | Magic
             | HasName
             | HasMobType
             | HasHP
@@ -193,25 +196,130 @@ def main():
                         case "spell":
                             spells_menu = TextMenu()
                             spells_menu.add_option("cancel", key="cancel", tag="menu")
-                            spells_menu.add_option("improvise spell", key="improvise_spell")
+                            spells_menu.add_option(
+                                "improvise spell", key="improvise_spell"
+                            )
                             for spell_name in unit.spell_database.keys():
                                 spells_menu.add_option(
                                     spell_name,
                                     tag="spell",
                                 )
+                            for i, option in enumerate(spells_menu.options.values()):
+                                print(f"{i}:{option["text"]}")
                             while True:
                                 try:
                                     command = int(
-                                            input("番号を入力して選択" + PROMPT_SYMBOL)
-                                        )
+                                        input("番号を入力して選択" + PROMPT_SYMBOL)
+                                    )
                                     spells_menu.selector_point_at(command)
                                 except ValueError:
                                     continue
                                 except IndexError:
                                     continue
-                                match spells_menu.current_selection()[0]:
+                                selection = spells_menu.current_selection()[0]
+                                match selection:
                                     case "cancel":
                                         break
+                                    case "improvise_spell":
+                                        break
+                                    case _:
+                                        print("属性：", end="")
+                                        if elements := unit.spell_database[
+                                            selection
+                                        ].magic.alchemical_elements:
+                                            print(f"{' '.join(elements)}")
+                                        else:
+                                            print("無し")
+                                        print("特性：", end="")
+                                        if traits := unit.spell_database[
+                                            selection
+                                        ].magic.traits:
+                                            print(f"特性：{' '.join(traits)}")
+                                        else:
+                                            print("無し")
+                                        if not (
+                                            memo := unit.spell_database[selection].memo
+                                        ):
+                                            memo = "メモに記述がない"
+                                        print(memo)
+                                        command = input("使う?(y/n)" + PROMPT_SYMBOL)
+                                        match command:
+                                            case "y":
+                                                strength = input(
+                                                    f"込めるマナ({unit.spell_database[selection].magic.strength})"
+                                                    + PROMPT_SYMBOL
+                                                )
+                                                try:
+                                                    if strength != "":
+                                                        unit.spell_database[
+                                                            selection
+                                                        ].magic.strength = int(strength)
+                                                except ValueError:
+                                                    continue
+                                                if (
+                                                    unit.spell_database[
+                                                        selection
+                                                    ].magic.strength
+                                                    > unit.mana.current
+                                                ):
+                                                    print("マナが足りない")
+                                                    continue
+                                                targets_menu = TextMenu()
+                                                targets_menu.add_option(
+                                                    "cancel", key="cancel", tag="menu"
+                                                )
+                                                for i, target_candidate in enumerate(
+                                                    units_on_battlefield
+                                                ):
+                                                    targets_menu.add_option(
+                                                        target_candidate.name,
+                                                        callback=lambda target_id=i: target_id,
+                                                    )
+                                                for i, option in enumerate(
+                                                    targets_menu.options
+                                                ):
+                                                    print(f"{i}:{option}")
+                                                try:
+                                                    command = int(
+                                                        input(
+                                                            "番号を入力して選択"
+                                                            + PROMPT_SYMBOL
+                                                        )
+                                                    )
+                                                    targets_menu.selector_point_at(
+                                                        command
+                                                    )
+                                                except ValueError:
+                                                    continue
+                                                except IndexError:
+                                                    continue
+                                                match targets_menu.current_selection()[
+                                                    0
+                                                ]:
+                                                    case "cancel":
+                                                        break
+                                                    case _:
+                                                        target_id: int = targets_menu.execute_current_selection()
+                                                        print("target_id", target_id)
+                                                        target = units_on_battlefield[
+                                                            target_id
+                                                        ]
+                                                        battlecommand_queue.append(
+                                                            {
+                                                                "type": "spell",
+                                                                "spell_name": selection,
+                                                                "spell": unit.spell_database[
+                                                                    selection
+                                                                ].magic,
+                                                                "target": target,
+                                                                "actor": unit,
+                                                            }
+                                                        )
+                                                        break
+                                            case _:
+                                                continue
+                            break
+
                         case "close_combat":
                             targets_menu = TextMenu()
                             targets_menu.add_option("cancel", key="cancel", tag="menu")
@@ -283,6 +391,26 @@ def main():
                 if target.hp.current == 0:
                     continue
                 match battlecommand["type"]:
+                    case "spell":
+                        print(f"{actor.name}の{battlecommand['spell_name']}！")
+                        actor.mana.current -= battlecommand["spell"].strength
+                        hp_delta = 0
+                        if SpellTrait.SUBTRACTION in battlecommand["spell"].traits:
+                            hp_delta -= battlecommand["spell"].strength
+                        if SpellTrait.ADDITION in battlecommand["spell"].traits:
+                            hp_delta += battlecommand["spell"].strength
+                        if hp_delta < 0:
+                            target.hp.current += hp_delta
+                            print(f"{target.name}に{hp_delta}ダメージを与えた！")
+                            if target.hp.current <= 0:
+                                print(f"{target.name}は倒れた！")
+                                world.reserve_to_delete(target)
+                                break
+                        elif hp_delta > 0:
+                            target.hp.current += hp_delta
+                            print(f"{target.name}のHPを{hp_delta}回復した！")
+                            if target.hp.current > target.hp.max_:
+                                target.hp.max_ = target.hp.current
                     case "guard":
                         print(f"{actor.name}は身を守っている！未実装")
                         # actor.status_effects.append({"heat_resistance": random.random()})

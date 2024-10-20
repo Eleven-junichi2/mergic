@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 from enum import Enum, StrEnum, auto
 from math import log10
 from itertools import permutations, islice
-from typing import Callable, Iterable, TypedDict, Unpack
+from typing import Callable, Iterable, Optional, Unpack
 import time
 import random
 import functools
@@ -21,11 +21,40 @@ class AlchemicalElement(StrEnum):
     DARK = auto()
 
 
+class SpellTrait(StrEnum):
+    ADDITION = auto()
+    SUBTRACTION = auto()
+    CONFUSION = auto()
+    TEMPTATION = auto()
+    VAMPIRE = auto()
+    DROWSINESS = auto()
+    SLEEP = auto()
+    RANDOM_ELEMENTS = auto()
+    STUN = auto()
+    DISPEL = auto()
+    PURIFY = auto()
+    POISON = auto()
+
+
+class StatusEffect(StrEnum):
+    DOT = auto()
+    POISONED = auto()
+    CONFUSING = auto()
+    TEMPTED = auto()
+    BURNING = auto()
+    FROSTBITED = auto()
+    FROZEN = auto()
+    BLIND = auto()
+    DROWSY = auto()
+    SLEEPING = auto()
+
+
 @dataclass
 class Magic:
     alchemical_elements: set[AlchemicalElement]
-    traits: set
+    traits: set[SpellTrait]
     strength: int
+    generator_integer: Optional[int] = None
 
 
 @dataclass
@@ -37,14 +66,10 @@ class Mana:
         self.current = self.max_
 
 
-class SpellRecord(TypedDict):
-    ingeger_spell: int
-    default_strength: int
-    memo: str
-
-
-class SpellDatabase(TypedDict):
-    name: dict[str, SpellRecord]
+@dataclass
+class SpellRecord:
+    magic: Magic
+    memo: str = ""
 
 
 def measure_time_performance(func: Callable):
@@ -214,8 +239,7 @@ def generate_magic(integer_spell: int, strength: int) -> Magic:
     if integer_spell > 10**9:
         raise ValueError("integer_spell is too large")
     found_inttype = 0
-    magic = Magic(set(), set(), 0)
-    magic.strength = strength
+    magic = Magic(set(), set(), strength=strength, generator_integer=integer_spell)
 
     async def async_int_type_check(integer_spell: int):
         loop = asyncio.get_running_loop()
@@ -245,36 +269,36 @@ def generate_magic(integer_spell: int, strength: int) -> Magic:
         magic.alchemical_elements.add(AlchemicalElement.DARK)
     if integer_spell % 2 == 0:
         found_inttype |= IntTypeBitmaskMarker.EVEN.value
-        magic.traits.add("addition")
+        magic.traits.add(SpellTrait.ADDITION)
         if integer_spell < 0:
             magic.alchemical_elements.add(AlchemicalElement.COLD)
         if integer_spell % 5 == 0:
-            magic.traits.add("confusion")
+            magic.traits.add(SpellTrait.CONFUSION)
     if integer_spell % 2 != 0:
         found_inttype |= IntTypeBitmaskMarker.ODD.value
-        magic.traits.add("subtraction")
+        magic.traits.add(SpellTrait.SUBTRACTION)
         if integer_spell < 0:
             magic.alchemical_elements.add(AlchemicalElement.HEAT)
         if integer_spell % 1001 == 0:
-            magic.traits.add("temptation")
+            magic.traits.add(SpellTrait.TEMPTATION)
     if found_inttype & IntTypeBitmaskMarker.VAMPIRE.value:
-        magic.traits.add("vampire")
+        magic.traits.add(SpellTrait.VAMPIRE)
     if found_inttype & IntTypeBitmaskMarker.STROBOGRAMMATIC.value:
-        magic.traits.add("drowsiness")
+        magic.traits.add(SpellTrait.DROWSINESS)
     if (
         found_inttype
         & IntTypeBitmaskMarker.STROBOGRAMMATIC.value
         & IntTypeBitmaskMarker.PRIME.value
     ):
-        magic.traits.add("sleep")
+        magic.traits.add(SpellTrait.SLEEP)
     return magic
 
 
 def auto_name(magic: Magic, language_code="en"):
     name = ""
-    element_or_trait_names = [
-        str(element) for element in magic.alchemical_elements
-    ] + list(magic.traits)
+    element_or_trait_names = [str(element) for element in magic.alchemical_elements] + [
+        str(trait) for trait in magic.traits
+    ]
     element_or_trait_names_size = len(element_or_trait_names)
     random.shuffle(element_or_trait_names)
     # print(element_or_trait_names, "size:", element_or_trait_names_size)
@@ -293,12 +317,23 @@ def auto_name(magic: Magic, language_code="en"):
         name = name.replace("っっ", "")
         if name[0] == "っ":
             name = name[1:]
+        print("name-1", name[-1])
         if name[-1] == "っ":
-            name[-1] == "ー"
+            name = name[:-1]+"ー" 
         name = jaconv.hira2kata(name)
     else:
         raise NotImplementedError(f"{language_code} name is not supported.")
     return name
+
+def auto_description(magic, language_code="en"):
+    description = ""
+    if language_code == "en":
+        pass
+    elif language_code == "ja":
+        pass
+    else:
+        raise NotImplementedError(f"{language_code} description is not supported.")
+    return description
 
 
 def playground_cli():
@@ -309,6 +344,7 @@ def playground_cli():
     print(magic.traits)
     print(magic.alchemical_elements)
     print(magic.strength)
+    print(magic.generator_integer)
     for language_code in ("en", "ja"):
         print(
             f"auto-generated name({language_code}): ", auto_name(magic, language_code)

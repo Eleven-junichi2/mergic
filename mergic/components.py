@@ -1,9 +1,9 @@
 from dataclasses import dataclass, field
-from typing import Optional, TypedDict
+from typing import Optional
 
 import pygame
 
-from mergic.wizard import SpellDatabase, Mana
+from mergic.wizard import Mana, SpellRecord
 import mergic
 
 
@@ -43,7 +43,7 @@ class HasFriendlyMobTypes:
 
 @dataclass
 class HasSpellDatabase:
-    spell_database: SpellDatabase
+    spell_database: dict[str, SpellRecord]
 
 
 @dataclass
