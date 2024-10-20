@@ -1,10 +1,7 @@
-from collections import deque
 from dataclasses import dataclass, field
 from enum import Enum, StrEnum, auto
 from math import log10
-from itertools import permutations, islice, chain
-import math
-import os
+from itertools import permutations, islice
 from typing import Callable, Iterable, TypedDict, Unpack
 import time
 import random
@@ -69,21 +66,6 @@ def measure_time_performance(func: Callable):
 # @measure_time_performance
 def is_prime_number(number: int):
     return sympy.isprime(number)
-    # if number < 2:
-    #     return False
-    # found_primes = [True] * (number+1)
-    # found_primes[0] = found_primes[1] = False
-    # if number == 0:
-    #     return False
-    # for num in range(2 ** 2, number + 1):
-    #     print("\033[A", num)
-    #     if found_primes[num]:
-    #         for i in range(num * num, number + 1, num):
-    #             # print("i", i, end=" compromise!\n")
-    #             # print("i", i)
-    #             # if number % i == 0:
-    #             found_primes[i] = False
-    # return found_primes[number]
 
 
 def join_digits(digits: Iterable):
@@ -159,8 +141,8 @@ def is_vampire_number(number: int) -> bool:
     digits, digit_length = split_number_into_digits(number)
     if digit_length % 2 != 0:
         return False
-    chunks = split_into_chunks(set(permutations(digits)), os.cpu_count() // 2)
-    with concurrent.futures.ProcessPoolExecutor() as executor:
+    chunks = split_into_chunks(set(permutations(digits)), 2)
+    with concurrent.futures.ThreadPoolExecutor() as executor:
         futures = [
             executor.submit(
                 _verify_is_digit_split_product_vampire_number_fangs,
@@ -174,20 +156,6 @@ def is_vampire_number(number: int) -> bool:
             future.result() for future in concurrent.futures.as_completed(futures)
         ]
     return any(results)
-    # return result
-    # for chunk in chunks:
-    #     for digits_pattern in chunk:
-    #         print(digits_pattern)
-    #         left_digits = digits_pattern[: digit_length // 2]
-    #         right_digits = digits_pattern[digit_length // 2 :]
-    #         if left_digits[-1] + right_digits[-1] == 0:
-    #             continue
-    #         left, right = asyncio.run(
-    #             concurrently_join_digits(left_digits, right_digits)
-    #         )
-    #         if left * right == number:
-    #             return True
-    return False
 
 
 # @measure_time_performance
@@ -348,6 +316,4 @@ def playground_cli():
 
 
 if __name__ == "__main__":
-    print(generate_magic(9_9999_1111, 0))
-    # print(is_prime_number(1919111261))
-    # playground_cli()
+    playground_cli()

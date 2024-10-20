@@ -5,6 +5,8 @@ from mergic import wizard
 
 class TestWizard(unittest.TestCase):
     def test_magic(self):
+        with self.assertRaises(ValueError):
+            wizard.generate_magic(10_000_000_000, 1)
         self.assertSetEqual(
             set(
                 [
