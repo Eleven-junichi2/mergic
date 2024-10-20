@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from enum import Enum, StrEnum, auto
+from enum import Enum, Flag, StrEnum, auto
 from math import log10
 from itertools import permutations, islice
 from typing import Callable, Iterable, Optional, Unpack
@@ -226,72 +226,75 @@ def is_strobogrammatic_number(
     return True
 
 
-class IntTypeBitmaskMarker(Enum):
-    ODD = 0b00001
-    EVEN = 0b00010
-    PRIME = 0b00100
-    VAMPIRE = 0b01000
-    STROBOGRAMMATIC = 0b10000
+class IntTypeBitmaskMarker(Flag):
+    ODD = auto()
+    EVEN = auto()
+    PRIME = auto()
+    VAMPIRE = auto()
+    STROBOGRAMMATIC = auto()
 
 
 # @measure_time_performance
-def generate_magic(integer_spell: int, strength: int) -> Magic:
-    if integer_spell > 10**9:
-        raise ValueError("integer_spell is too large")
-    found_inttype = 0
-    magic = Magic(set(), set(), strength=strength, generator_integer=integer_spell)
+class spell_factory:
+    integer_spell_max = 10**9
+    @classmethod
+    def generate(cls, integer_spell: int, strength: int) -> Magic:
+        if integer_spell > cls.integer_spell_max:
+            raise ValueError(f"integer_spell is too large. (max: {cls.integer_spell_max})")
+        found_inttype = 0
+        magic = Magic(set(), set(), strength=strength, generator_integer=integer_spell)
 
-    async def async_int_type_check(integer_spell: int):
-        loop = asyncio.get_running_loop()
-        with concurrent.futures.ThreadPoolExecutor() as pool:
-            task_prime = loop.run_in_executor(pool, is_prime_number, integer_spell)
-            task_vampire = loop.run_in_executor(pool, is_vampire_number, integer_spell)
-            task_strobogrammatic = loop.run_in_executor(
-                pool, is_strobogrammatic_number, integer_spell
-            )
-            is_prime = await task_prime
-            is_vampire = await task_vampire
-            is_strobogrammatic = await task_strobogrammatic
-            return (
-                IntTypeBitmaskMarker.PRIME.value * is_prime
-                | IntTypeBitmaskMarker.VAMPIRE.value * is_vampire
-                | IntTypeBitmaskMarker.STROBOGRAMMATIC.value * is_strobogrammatic
-            )
+        async def async_int_type_check(integer_spell: int):
+            loop = asyncio.get_running_loop()
+            with concurrent.futures.ThreadPoolExecutor() as pool:
+                task_prime = loop.run_in_executor(pool, is_prime_number, integer_spell)
+                task_vampire = loop.run_in_executor(pool, is_vampire_number, integer_spell)
+                task_strobogrammatic = loop.run_in_executor(
+                    pool, is_strobogrammatic_number, integer_spell
+                )
+                is_prime = await task_prime
+                is_vampire = await task_vampire
+                is_strobogrammatic = await task_strobogrammatic
+                return (
+                    IntTypeBitmaskMarker.PRIME.value * is_prime
+                    | IntTypeBitmaskMarker.VAMPIRE.value * is_vampire
+                    | IntTypeBitmaskMarker.STROBOGRAMMATIC.value * is_strobogrammatic
+                )
 
-    found_inttype = asyncio.run(
-        async_int_type_check(integer_spell),
-    )
-    if integer_spell == 0:
-        magic.alchemical_elements.add(AlchemicalElement.VOID)
-    if integer_spell > 0:
-        magic.alchemical_elements.add(AlchemicalElement.LIGHT)
-    if integer_spell < 0:
-        magic.alchemical_elements.add(AlchemicalElement.DARK)
-    if integer_spell % 2 == 0:
-        found_inttype |= IntTypeBitmaskMarker.EVEN.value
-        magic.traits.add(SpellTrait.ADDITION)
+        found_inttype = asyncio.run(
+            async_int_type_check(integer_spell),
+        )
+        if integer_spell == 0:
+            magic.alchemical_elements.add(AlchemicalElement.VOID)
+        if integer_spell > 0:
+            magic.alchemical_elements.add(AlchemicalElement.LIGHT)
         if integer_spell < 0:
-            magic.alchemical_elements.add(AlchemicalElement.COLD)
-        if integer_spell % 5 == 0:
-            magic.traits.add(SpellTrait.CONFUSION)
-    if integer_spell % 2 != 0:
-        found_inttype |= IntTypeBitmaskMarker.ODD.value
-        magic.traits.add(SpellTrait.SUBTRACTION)
-        if integer_spell < 0:
-            magic.alchemical_elements.add(AlchemicalElement.HEAT)
-        if integer_spell % 1001 == 0:
-            magic.traits.add(SpellTrait.TEMPTATION)
-    if found_inttype & IntTypeBitmaskMarker.VAMPIRE.value:
-        magic.traits.add(SpellTrait.VAMPIRE)
-    if found_inttype & IntTypeBitmaskMarker.STROBOGRAMMATIC.value:
-        magic.traits.add(SpellTrait.DROWSINESS)
-    if (
-        found_inttype
-        & IntTypeBitmaskMarker.STROBOGRAMMATIC.value
-        & IntTypeBitmaskMarker.PRIME.value
-    ):
-        magic.traits.add(SpellTrait.SLEEP)
-    return magic
+            magic.alchemical_elements.add(AlchemicalElement.DARK)
+        if integer_spell % 2 == 0:
+            found_inttype |= IntTypeBitmaskMarker.EVEN.value
+            magic.traits.add(SpellTrait.ADDITION)
+            if integer_spell < 0:
+                magic.alchemical_elements.add(AlchemicalElement.COLD)
+            if integer_spell % 5 == 0:
+                magic.traits.add(SpellTrait.CONFUSION)
+        if integer_spell % 2 != 0:
+            found_inttype |= IntTypeBitmaskMarker.ODD.value
+            magic.traits.add(SpellTrait.SUBTRACTION)
+            if integer_spell < 0:
+                magic.alchemical_elements.add(AlchemicalElement.HEAT)
+            if integer_spell % 1001 == 0:
+                magic.traits.add(SpellTrait.TEMPTATION)
+        if found_inttype & IntTypeBitmaskMarker.VAMPIRE.value:
+            magic.traits.add(SpellTrait.VAMPIRE)
+        if found_inttype & IntTypeBitmaskMarker.STROBOGRAMMATIC.value:
+            magic.traits.add(SpellTrait.DROWSINESS)
+        if (
+            found_inttype
+            & IntTypeBitmaskMarker.STROBOGRAMMATIC.value
+            & IntTypeBitmaskMarker.PRIME.value
+        ):
+            magic.traits.add(SpellTrait.SLEEP)
+        return magic
 
 
 def auto_name(magic: Magic, language_code="en"):
@@ -317,7 +320,6 @@ def auto_name(magic: Magic, language_code="en"):
         name = name.replace("っっ", "")
         if name[0] == "っ":
             name = name[1:]
-        print("name-1", name[-1])
         if name[-1] == "っ":
             name = name[:-1]+"ー" 
         name = jaconv.hira2kata(name)
@@ -340,7 +342,7 @@ def playground_cli():
     print("Wizard's playground")
     int_spell = int(input("integer spell: "))
     strength = int(input("strength: "))
-    magic = generate_magic(int_spell, strength)
+    magic = spell_factory.generate(int_spell, strength)
     print(magic.traits)
     print(magic.alchemical_elements)
     print(magic.strength)

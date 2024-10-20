@@ -11,6 +11,8 @@ from typing import (
     SupportsInt,
     Tuple,
     Type,
+    TypeAlias,
+    get_args,
 )
 from dataclasses import dataclass, field
 from functools import partial
@@ -162,18 +164,15 @@ class ECS:
     def entities_for_components[T](
         self, *component_types: type[T]
     ) -> Generator[T, Any, None]:
-        """TODO: fix this to be more efficient"""
+        """TODO: fix this to be more efficient\n
+        If you want to use a union type alias for `component_types`,
+        you can do it with typing.get_args function converts the type alias to the tuple of types.
+        """
         entities = deque()
         for entity_type in self.entities.keys():
             if set(component_types).issubset(entity_type.__mro__):
                 entities.extend(self.entities_for_type(entity_type))
         yield from entities
-        # entities = set()
-        # for component_type in component_types:
-        #     for entity_type in self.entities.keys():
-        #         if component_type in entity_type.__mro__:
-        #             entities.add(*self.entities_for_type(entity_type))
-        # yield from entities
 
 
 class ActionController:

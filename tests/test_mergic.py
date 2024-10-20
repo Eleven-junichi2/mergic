@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import get_args
 import unittest
 
 from mergic import ECS, GameMap, TextMenu, entityclass, GameWorld
@@ -82,6 +83,14 @@ class TestECS(unittest.TestCase):
         for entity in world.entities_for_components(DummyComponent):
             self.assertEqual(entity.__class__ in (DummyEntity, DummyEntity2, DummyEntity3), True)
 
+    def test_get_entities_from_components_type_alias(self):
+        ExampleTypeAlias = DummyComponent | DummyComponent2
+        world = ECS()
+        world.add(DummyEntity())
+        world.add(DummyEntity2())
+        world.add(DummyEntity3())
+        result = [entity.__class__ for entity in world.entities_for_components(*get_args(ExampleTypeAlias))]
+        self.assertCountEqual([DummyEntity3, DummyEntity2], result, msg=f"result={result}")
 
 class TestGameMap(unittest.TestCase):
     def test_painting_map(self):
