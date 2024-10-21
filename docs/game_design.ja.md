@@ -12,6 +12,14 @@
 
 ## データ構造
 
+### マップデータ
+
+複数のレイヤーを用意する。
+各マスに含めるデータをセルと呼称する。
+セルに性質（通行可能など）を格納するtiletypeレイヤー
+セルに見た目を指定するIDを格納するvisualレイヤー
+を持つ。
+
 tiletype_to_surf タイルの種類に対するpygame.Surfaceの辞書。str: pygame.Surface
 assetname_to_filepath ファイルパスに対するエイリアス名辞書。 AssetFinderがこの役目を担う
 
