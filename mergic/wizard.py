@@ -47,6 +47,23 @@ class StatusEffect(StrEnum):
     BLIND = auto()
     DROWSY = auto()
     SLEEPING = auto()
+    STUN = auto()
+    TERRIFIED = auto()
+
+
+BuffVariants = (StatusEffect.BURNING, StatusEffect.FROSTBITED, StatusEffect.FROZEN)
+DebuffVariants = (
+    StatusEffect.DOT,
+    StatusEffect.POISONED,
+    StatusEffect.TEMPTED,
+    StatusEffect.BURNING,
+    StatusEffect.FROSTBITED,
+    StatusEffect.FROZEN,
+    StatusEffect.BLIND,
+    StatusEffect.DROWSY,
+    StatusEffect.SLEEPING,
+    StatusEffect.STUN,
+)
 
 
 @dataclass
@@ -237,10 +254,13 @@ class IntTypeBitmaskMarker(Flag):
 # @measure_time_performance
 class spell_factory:
     integer_spell_max = 10**9
+
     @classmethod
     def generate(cls, integer_spell: int, strength: int) -> Magic:
         if integer_spell > cls.integer_spell_max:
-            raise ValueError(f"integer_spell is too large. (max: {cls.integer_spell_max})")
+            raise ValueError(
+                f"integer_spell is too large. (max: {cls.integer_spell_max})"
+            )
         found_inttype = 0
         magic = Magic(set(), set(), strength=strength, generator_integer=integer_spell)
 
@@ -248,7 +268,9 @@ class spell_factory:
             loop = asyncio.get_running_loop()
             with concurrent.futures.ThreadPoolExecutor() as pool:
                 task_prime = loop.run_in_executor(pool, is_prime_number, integer_spell)
-                task_vampire = loop.run_in_executor(pool, is_vampire_number, integer_spell)
+                task_vampire = loop.run_in_executor(
+                    pool, is_vampire_number, integer_spell
+                )
                 task_strobogrammatic = loop.run_in_executor(
                     pool, is_strobogrammatic_number, integer_spell
                 )
@@ -321,11 +343,12 @@ def auto_name(magic: Magic, language_code="en"):
         if name[0] == "っ":
             name = name[1:]
         if name[-1] == "っ":
-            name = name[:-1]+"ー" 
+            name = name[:-1] + "ー"
         name = jaconv.hira2kata(name)
     else:
         raise NotImplementedError(f"{language_code} name is not supported.")
     return name
+
 
 def auto_description(magic, language_code="en"):
     description = ""

@@ -16,6 +16,8 @@ from mergic.components import (
     HasHostileMobTypes,
     HasFriendlyMobTypes,
     HasSpellDatabase,
+    HasStatusEffects,
+    HasResistance,
 )
 
 
@@ -35,6 +37,8 @@ class Player(
     HasHostileMobTypes,
     HasFriendlyMobTypes,
     HasSpellDatabase,
+    HasStatusEffects,
+    HasResistance,
     AbleToHaveStudent,
     AbleToHaveMentor,
 ):
@@ -55,6 +59,8 @@ class Mob(
     HasHostileFactions,
     HasFriendlyFactions,
     HasSpellDatabase,
+    HasStatusEffects,
+    HasResistance,
     HasHostileMobTypes,
     HasFriendlyMobTypes,
 ):

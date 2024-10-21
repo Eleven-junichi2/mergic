@@ -3,7 +3,7 @@ from typing import Optional
 
 import pygame
 
-from mergic.wizard import Mana, SpellRecord
+from mergic.wizard import AlchemicalElement, Mana, SpellRecord, StatusEffect
 import mergic
 
 
@@ -15,6 +15,13 @@ class HP:
     def __post_init__(self):
         self.current = self.max_
 
+@dataclass
+class HasStatusEffects:
+    status_effects: dict[StatusEffect, list[int]] # status_effect_variant: list_for_stack[int_for_remaining_turns]
+
+@dataclass
+class HasResistance:
+    resistances: dict[AlchemicalElement, float] # resistance_type: resistance_value
 
 @dataclass
 class HasMobType:

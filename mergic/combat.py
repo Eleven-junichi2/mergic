@@ -2,7 +2,7 @@ from collections import deque
 from dataclasses import dataclass, field
 from enum import StrEnum, auto
 import random
-from typing import Iterable, Optional, Sequence, Tuple, TypeAlias
+from typing import Callable, Iterable, Optional, Sequence, Tuple, TypeAlias, Unpack
 from mergic import TextMenu
 from mergic import wizard
 from mergic.cli import PromptResult, ask_yes_no, inquire_typed_value
@@ -17,10 +17,12 @@ from mergic.components import (
     HasSpellDatabase,
     HasHostileMobTypes,
     HasFriendlyMobTypes,
+    HasStatusEffects,
+    HasResistance
 )
-from mergic.wizard import SpellRecord
+from mergic.wizard import AlchemicalElement, SpellRecord, SpellTrait, StatusEffect
 
-UnitType: TypeAlias = (
+CombatUnit: TypeAlias = (
     HasName
     | HasMobType
     | HasHP
@@ -31,6 +33,8 @@ UnitType: TypeAlias = (
     | HasSpellDatabase
     | HasFriendlyMobTypes
     | HasHostileMobTypes
+    | HasStatusEffects
+    | HasResistance
 )
 
 
@@ -43,30 +47,36 @@ class TurnActionType(StrEnum):
 @dataclass
 class TurnAction:
     type_: TurnActionType
-    actor: UnitType
-    targets: tuple[UnitType]
+    actor: CombatUnit
+    targets: tuple[CombatUnit]
     spell_name: Optional[str] = None
+    spell_record: Optional[SpellRecord] = None
 
 
-def sort_units_by_proper_order(units: list[UnitType]):
+def sorted_units_by_physical_ability(
+    units: list[CombatUnit],
+    priority_faction_a_against_b="player",
+    delayed_faction_b_against_a="enemy",
+):
     units = sorted(
-        list(units),
+        units,
         key=lambda entity: entity.physical_ability,
         reverse=True,
     )
     for i, unit in enumerate(units):
         if i > 0:
-            if ("enemy" in unit.friendly_factions) and (
-                "player" in units[i - 1].hostile_factions
+            if (delayed_faction_b_against_a in unit.friendly_factions) and (
+                priority_faction_a_against_b in units[i - 1].hostile_factions
             ):
                 if unit.physical_ability == units[i - 1]:
                     units[i], units[i - 1] = (
                         units[i - 1],
                         units[i],
                     )
+    return units
 
 
-def print_units_info(units: Iterable[UnitType]):
+def print_units_info(units: Iterable[CombatUnit]):
     print("-")
     for unit in units:
         print(
@@ -75,7 +85,7 @@ def print_units_info(units: Iterable[UnitType]):
     print("-")
 
 
-def target_menu_template(units: Iterable[UnitType]):
+def target_menu_template(units: Iterable[CombatUnit]):
     """Returns a menu that can be used to select the target of `units`.
     The callback of each option is set to a function that returns the index of the unit in `units`."""
     target_menu = TextMenu()
@@ -87,15 +97,19 @@ def target_menu_template(units: Iterable[UnitType]):
     return target_menu
 
 
-def inquire_turn_action() -> PromptResult[TurnActionType]:
+def inquire_turn_action_type(
+    turn_action_types: Sequence[TurnActionType],
+) -> PromptResult[TurnActionType]:
     texts = {
         TurnActionType.CLOSE_COMBAT: "足掻く",
         TurnActionType.SPELL: "呪文",
         TurnActionType.ESCAPE: "逃げる",
     }
     actions_menu = TextMenu()
-    for turn_action_type in TurnActionType:
-        actions_menu.add_option(texts[turn_action_type], key=turn_action_type)
+    for turn_action_type in turn_action_types:
+        actions_menu.add_option(
+            texts.get(turn_action_type, turn_action_type.value), key=turn_action_type
+        )
     for i, option in enumerate(actions_menu.options.values()):
         print(f"{i}:{option["text"]}")
     while True:
@@ -107,8 +121,10 @@ def inquire_turn_action() -> PromptResult[TurnActionType]:
         return PromptResult.Ok(TurnActionType(actions_menu.current_selection()[0]))
 
 
-def inquire_target(units_on_battlefield: Sequence[UnitType]) -> PromptResult[UnitType]:
-    target_menu = target_menu_template(units_on_battlefield)
+def inquire_target(
+    units: Sequence[CombatUnit],
+) -> PromptResult[CombatUnit]:
+    target_menu = target_menu_template(units)
     for i, option in enumerate(target_menu.options.values()):
         print(f"{i}:{option["text"]}")
     if command := inquire_typed_value("番号を入力して選択", int):
@@ -117,13 +133,11 @@ def inquire_target(units_on_battlefield: Sequence[UnitType]) -> PromptResult[Uni
             return PromptResult.Cancel()
     else:
         return PromptResult.Cancel()
-    return PromptResult.Ok(
-        units_on_battlefield[target_menu.execute_current_selection()]
-    )
+    return PromptResult.Ok(units[target_menu.execute_current_selection()])
 
 
 def prompt_spell_generator(
-    actor: UnitType, prompt_symbol: str = ">"
+    actor: CombatUnit, prompt_symbol: str = ">"
 ) -> PromptResult[Tuple[str, SpellRecord]]:
     """Returns auto name of the spell and Magic"""
     while True:
@@ -148,7 +162,7 @@ def prompt_spell_generator(
     return PromptResult.Ok((spell_name, SpellRecord(magic)))
 
 
-def inquire_spell(actor: UnitType) -> PromptResult[Tuple[str, SpellRecord]]:
+def inquire_spell(actor: CombatUnit) -> PromptResult[Tuple[str, SpellRecord]]:
     """Returns name of the spell and SpellRecord"""
     spell_menu = TextMenu()
     spell_menu.add_option("Cancel", key="cancel")
@@ -204,135 +218,227 @@ def print_spell_info(spell_name: str, spell_record: SpellRecord):
     print(memo)
 
 
-def combat_loop_cli(
-    units_on_battlefield: Iterable[UnitType],
-    mob_types_controlled_manually: Iterable[str] = (
-        "player_master",
-        "player_apprentice",
-    ),
-):
-    units_on_battlefield = list(units_on_battlefield)
-    sort_units_by_proper_order(units_on_battlefield)
-    turn_action_queue: deque[TurnAction] = deque()
-    running = True
-    deads = deque()
-    while running:
-        for dead in deads:
-            units_on_battlefield.remove(dead)
-        deads.clear()
-        print_units_info(units_on_battlefield)
-        for unit in units_on_battlefield:
-            if unit.mob_type in mob_types_controlled_manually:
-                if unit.hp.current <= 0:
-                    continue
-                print(f"({unit.name}の番だ)")
-                manipulating_unit = True
-                while manipulating_unit:
-                    turn_action_type = inquire_turn_action().unwrap()
-                    match turn_action_type:
-                        case TurnActionType.ESCAPE:
-                            running = False
+def query_living_units(units: Iterable[CombatUnit]):
+    yield from [unit for unit in units if unit.hp.current > 0]
+
+
+def query_dead_units(units: Iterable[CombatUnit]):
+    yield from [unit for unit in units if unit.hp.current <= 0]
+
+
+BoolToToggleLoop = bool
+
+
+class CombatLoopCLI:
+    @staticmethod
+    def run(
+        units_on_battlefield: Iterable[CombatUnit],
+        manual_control_mob_types: Iterable[str],
+        prompts_for_manual_control_mobs: dict[
+            TurnActionType,
+            Callable[[CombatUnit, Iterable[CombatUnit]], PromptResult[TurnAction]],
+        ],
+        turn_action_processors: dict[
+            TurnActionType, Callable[[TurnAction], BoolToToggleLoop]
+        ],
+        instant_turn_action_types: set[TurnActionType],
+    ):
+        """戦闘をCLI上でシミュレートします。"""
+        units = sorted_units_by_physical_ability(list(units_on_battlefield))
+        turn_action_queue: deque[TurnAction] = deque()
+        running = True
+        while running:
+            print_units_info(units)
+            for unit in query_living_units(units):
+                if unit.mob_type in manual_control_mob_types:
+                    print(f"({unit.name}の番だ)")
+                    while running:
+                        turn_action_type = inquire_turn_action_type(
+                            prompts_for_manual_control_mobs.keys()
+                        ).unwrap()
+                        if is_configured := prompts_for_manual_control_mobs[
+                            turn_action_type
+                        ](unit, units):
+                            if turn_action := is_configured.unwrap():
+                                if turn_action.type_ in instant_turn_action_types:
+                                    running = turn_action_processors[turn_action.type_](
+                                        turn_action
+                                    )
+                                    if not running:
+                                        break
+                                turn_action_queue.append(turn_action)
                             break
-                        case TurnActionType.CLOSE_COMBAT:
-                            print("誰に？")
-                            if not (
-                                target := inquire_target(
-                                    units_on_battlefield=units_on_battlefield,
-                                )
-                            ):
-                                print("コンテ")
-                                continue
-                            turn_action_queue.append(
-                                TurnAction(
-                                    type_=turn_action_type,
-                                    actor=unit,
-                                    targets=(target.unwrap(),),
-                                )
-                            )
-                            break
-                        case TurnActionType.SPELL:
-                            while True:
-                                if result := inquire_spell(actor=unit):
-                                    spell_name, spell_record = result.unwrap()
-                                else:
-                                    break
-                                print_spell_info(spell_name, spell_record)
-                                if ask_yes_no("使う？"):
-                                    if strength := inquire_typed_value(
-                                        "込めるマナ",
-                                        int,
-                                        default_value=spell_record.magic.strength,
-                                    ):
-                                        strength = strength.unwrap()
-                                        if strength > unit.mana.current:
-                                            print(
-                                                f"マナが足りない（現在＝{unit.mana.current}）"
-                                            )
-                                            continue
-                                        print("誰に？")
-                                        if target := inquire_target(
-                                            units_on_battlefield=units_on_battlefield,
-                                        ):
-                                            turn_action_queue.append(
-                                                TurnAction(
-                                                    type_=TurnActionType.SPELL,
-                                                    actor=unit,
-                                                    targets=(target.unwrap(),),
-                                                    spell_name=spell_name,
-                                                )
-                                            )
-                                            manipulating_unit = False
-                                            break
-                                        else:
-                                            continue
-            if not running:
-                break
-        if not running:
-            break
-        for turn_action in turn_action_queue:
-            # print(turn_action)
-            match turn_action.type_:
-                case TurnActionType.SPELL:
-                    print(f"{turn_action.actor.name}の{turn_action.spell_name}！")
-                    print("未実装！")
-                case TurnActionType.CLOSE_COMBAT:
-                    print(f"{turn_action.actor.name}の攻撃！")
-                    for target in turn_action.targets:
-                        if target.hp.current <= 0:
-                            continue
-                        damage = random.randint(
-                            0, turn_action.actor.physical_ability
-                        ) - random.randint(0, target.physical_ability)
-                        if damage < 0:
-                            if turn_action.actor == target:
-                                print(
-                                    f"{turn_action.actor.name}は自身を傷つけようとしたが威力が足りなかった！"
-                                )
-                            elif (
-                                target.physical_ability
-                                > turn_action.actor.physical_ability
-                            ):
-                                print(f"{target.name}は攻撃を弾いた！")
-                            elif (
-                                target.physical_ability
-                                < turn_action.actor.physical_ability
-                            ):
-                                print(f"{target.name}は攻撃を躱した！")
-                            elif (
-                                target.physical_ability
-                                == turn_action.actor.physical_ability
-                            ):
-                                print(f"{target.name}は攻撃を受け止めた！")
-                            damage = 0
                         else:
-                            if turn_action.actor == target:
-                                print(
-                                    f"{turn_action.actor.name}は自身を傷つけ、{damage}ダメージを負った！"
-                                )
-                            else:
-                                print(f"{target.name}は{damage}ダメージを受けた！")
-                        target.hp.current -= damage
-                        if target.hp.current <= 0:
-                            print(f"{target.name}は倒れた！")
-                            deads.append(target)
-        turn_action_queue.clear()
+                            continue
+                if not running:
+                    break
+            for turn_action in turn_action_queue:
+                print("-")
+                running = turn_action_processors[turn_action.type_](turn_action)
+                print("-")
+            turn_action_queue.clear()
+
+
+def prompt_close_combat(
+    actor: CombatUnit, units=Iterable[CombatUnit]
+) -> PromptResult[TurnAction]:
+    print("誰に？")
+    if not (
+        target := inquire_target(
+            units=units,
+        )
+    ):
+        return PromptResult.Cancel()
+    return PromptResult.Ok(
+        TurnAction(
+            type_=TurnActionType.CLOSE_COMBAT,
+            actor=actor,
+            targets=(target.unwrap(),),
+        )
+    )
+
+
+def prompt_escape(
+    actor: CombatUnit, units=Iterable[CombatUnit]
+) -> PromptResult[TurnAction]:
+    return PromptResult.Ok(
+        TurnAction(type_=TurnActionType.ESCAPE, actor=actor, targets=())
+    )
+
+
+def prompt_spell(actor: CombatUnit, units=Iterable[CombatUnit]):
+    while True:
+        if result := inquire_spell(actor=actor):
+            spell_name, spell_record = result.unwrap()
+        print_spell_info(spell_name, spell_record)
+        if ask_yes_no("使う？"):
+            if strength := inquire_typed_value(
+                "込めるマナ",
+                int,
+                default_value=spell_record.magic.strength,
+            ):
+                strength = strength.unwrap()
+                if strength > actor.mana.current:
+                    print(f"マナが足りない（現在＝{actor.mana.current}）")
+                    continue
+                print("誰に？")
+                if target := inquire_target(
+                    units=units,
+                ):
+                    return PromptResult.Ok(
+                        TurnAction(
+                            type_=TurnActionType.SPELL,
+                            actor=actor,
+                            targets=(target.unwrap(),),
+                            spell_name=spell_name,
+                            spell_record=spell_record
+                        )
+                    )
+                else:
+                    continue
+        else:
+            return PromptResult.Cancel()
+
+
+def escape_processor(turn_action: TurnAction) -> BoolToToggleLoop:
+    return False
+
+def spell_processor(turn_action: TurnAction) -> BoolToToggleLoop:
+    print(f"{turn_action.actor.name}の{turn_action.spell_name}！")
+    actor = turn_action.actor
+    actors_magic = turn_action.spell_record.magic
+    for target in query_living_units(turn_action.targets):
+        actor.mana.current -= actors_magic.strength
+        target_hp_delta = 0
+        if SpellTrait.ADDITION in actors_magic.traits:
+            target_hp_delta += actors_magic.strength
+        if SpellTrait.SUBTRACTION in actors_magic.traits:
+            target_hp_delta -= actors_magic.strength
+        for element, resistance_value in target.resistances.items():
+            if element in actors_magic.alchemical_elements:
+                target_hp_delta *= 1-resistance_value
+        if AlchemicalElement.LIGHT in actors_magic.alchemical_elements:
+            if random.random() < .22:
+                print(f"{target.name}は強い光に目が眩んだ！")
+                target.status_effects.setdefault(StatusEffect.BLIND)
+                target.status_effects[StatusEffect.BLIND].append(actors_magic.strength // 3)
+        if AlchemicalElement.DARK in actors_magic.alchemical_elements:
+            if random.random() <.22:
+                print(f"{target.name}は恐怖に怯え始めた！")
+                target.status_effects.setdefault(StatusEffect.TERRIFIED)
+                target.status_effects[StatusEffect.TERRIFIED].append(actors_magic.strength // 3)
+        # if AlchemicalElement.HEAT in actors_magic.heats:
+
+
+        if target_hp_delta < 0:
+            print(f"{target.name}に{abs(target_hp_delta)}ダメージ！")
+            if SpellTrait.VAMPIRE:
+                print(f"{target.name}のHPをダメージ分吸収した！")
+        elif target_hp_delta > 0:
+            if SpellTrait.VAMPIRE:
+                print(f"{actor.name}のHPが{target.name}に分け与えられた！")
+            print(f"{target.name}のHPを{abs(target_hp_delta)}回復！")
+        if SpellTrait.VAMPIRE:
+            actor.hp.current -= target_hp_delta
+        target.hp.current += target_hp_delta
+        if SpellTrait.CONFUSION in actors_magic.traits:
+            print(f"{target.name}は混乱した！")
+            target.status_effects.setdefault(StatusEffect.CONFUSING)
+            target.status_effects[StatusEffect.CONFUSING].append(random.randint(1, actors_magic.strength // 3))
+        if SpellTrait.STUN in actors_magic.traits:
+            target.status_effects.setdefault(StatusEffect.STUN)
+            target.status_effects[StatusEffect.STUN].append(1)
+        if SpellTrait.DISPEL in actors_magic.traits:
+            print(f"{target.name}のバフが解除された！")
+            for status_effect in target.status_effects.keys():
+                if status_effect in wizard.BuffVariants:
+                    target.status_effects[status_effect].clear()
+        if SpellTrait.PURIFY in actors_magic.traits:
+            print(f"{target.name}のデバフが解除された！")
+            for status_effect in target.status_effects.keys():
+                if status_effect in wizard.DebuffVariants:
+                    target.status_effects[status_effect].clear()
+        if SpellTrait.DROWSINESS in actors_magic.traits:
+            print(f"{target.name}は眠気を感じ始めた…")
+            target.status_effects.setdefault(StatusEffect.DROWSY)
+            target.status_effects[StatusEffect.DROWSY].append(random.randint(1, actors_magic.strength // 3))
+        if SpellTrait.SLEEP in actors_magic.traits:
+            print(f"{target.name}は眠り始めた！")
+            target.status_effects.setdefault(StatusEffect.SLEEPING)
+            target.status_effects[StatusEffect.SLEEPING].append(random.randint(1, actors_magic.strength // 3))
+        if SpellTrait.POISON in actors_magic.traits:
+            print(f"{target.name}は毒に侵された！")
+            target.status_effects.setdefault(StatusEffect.POISONED)
+            target.status_effects[StatusEffect.POISONED].append(random.randint(1, actors_magic.strength // 3))
+        if SpellTrait.RANDOM_ELEMENTS:
+            print("RANDOM_ELEMENTSは未実装だ！")
+
+
+
+def close_combat_processor(turn_action: TurnAction) -> BoolToToggleLoop:
+    print(f"{turn_action.actor.name}の攻撃！")
+    for target in query_living_units(turn_action.targets):
+        damage = random.randint(0, turn_action.actor.physical_ability) - random.randint(
+            0, target.physical_ability
+        )
+        if damage < 0:
+            if turn_action.actor == target:
+                print(
+                    f"{turn_action.actor.name}は自身を傷つけようとしたが威力が足りなかった！"
+                )
+            elif target.physical_ability > turn_action.actor.physical_ability:
+                print(f"{target.name}は攻撃を弾いた！")
+            elif target.physical_ability < turn_action.actor.physical_ability:
+                print(f"{target.name}は攻撃を躱した！")
+            elif target.physical_ability == turn_action.actor.physical_ability:
+                print(f"{target.name}は攻撃を受け止めた！")
+            damage = 0
+        else:
+            if turn_action.actor == target:
+                print(
+                    f"{turn_action.actor.name}は自身を傷つけ、{damage}ダメージを負った！"
+                )
+            else:
+                print(f"{target.name}は{damage}ダメージを受けた！")
+        target.hp.current -= damage
+    return True

@@ -27,6 +27,8 @@ def main():
         friendly_mob_types=set(),
         hostile_mob_types=set(),
         spell_database={},
+        status_effects={},
+        resistances={},
         mentor=None,
         student="apprenticeA",
     )
@@ -50,6 +52,8 @@ def main():
             friendly_mob_types=set(),
             hostile_mob_types=set(),
             spell_database={},
+            status_effects={},
+            resistances={},
             mentor="masterA",
             student=None,
         )
@@ -71,10 +75,26 @@ def main():
                 friendly_mob_types=set,
                 hostile_mob_types=set(),
                 spell_database={},
+                status_effects={},
+                resistances={},
             )
         )
-    combat.combat_loop_cli(
-        world.entities_for_components(*typing.get_args(combat.UnitType))
+    combat.CombatLoopCLI().run(
+        units_on_battlefield=world.entities_for_components(
+            *typing.get_args(combat.CombatUnit)
+        ),
+        manual_control_mob_types=("player_master", "player_apprentice"),
+        prompts_for_manual_control_mobs={
+            combat.TurnActionType.CLOSE_COMBAT: combat.prompt_close_combat,
+            combat.TurnActionType.SPELL: combat.prompt_spell,
+            combat.TurnActionType.ESCAPE: combat.prompt_escape,
+        },
+        turn_action_processors={
+            combat.TurnActionType.CLOSE_COMBAT: combat.close_combat_processor,
+            combat.TurnActionType.SPELL: combat.spell_processor,
+            combat.TurnActionType.ESCAPE: combat.escape_processor,
+        },
+        instant_turn_action_types={combat.TurnActionType.ESCAPE}
     )
 
 
