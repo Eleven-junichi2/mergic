@@ -159,6 +159,13 @@ class TestTextMenu(unittest.TestCase):
         gamemenu.add_option(text="happy", key="save")
         gamemenu.add_option("うおお")
         self.assertEqual(gamemenu.longest_text_length, 5)
+    
+    def test_game_menu_select_at_index(self):
+        gamemenu = TextMenu()
+        gamemenu.add_option("abc")
+        with self.assertRaises(IndexError):
+            gamemenu.selector_point_at(-1)
+            gamemenu.selector_point_at(2)
 
 
 if __name__ == "__main__":

@@ -311,6 +311,8 @@ class TextMenu:
         self.selector = (self.selector + 1) % len(self.options)
 
     def selector_point_at(self, index: int):
+        if index < 0 or len(self.options) < index:
+            raise IndexError(f"Invalid index(max={len(self.options)})")
         self.selector = index
 
     def add_option(
