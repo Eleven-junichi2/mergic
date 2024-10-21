@@ -5,6 +5,7 @@ import random
 from typing import Iterable, Optional, Sequence, Tuple, TypeAlias
 from mergic import TextMenu
 from mergic import wizard
+from mergic.cli import PromptResult, ask_yes_no, inquire_typed_value
 from mergic.components import (
     HasFriendlyFactions,
     HasHP,
@@ -47,35 +48,6 @@ class TurnAction:
     spell_name: Optional[str] = None
 
 
-@dataclass(init=False)
-class PromptResult[T]:
-    """This class represents the result of a CLI prompt.
-    The reason for wrapping the result in this class is to
-    prevent values such as 0 and "" from being considered False."""
-
-    value: T = field(init=False)
-    _is_ok: bool = field(init=False)
-
-    @classmethod
-    def Ok(cls, value: T):
-        wrapper = PromptResult[T]()
-        wrapper.value = value
-        wrapper._is_ok = True
-        return wrapper
-
-    @classmethod
-    def Cancel(cls):
-        wrapper = PromptResult[T]()
-        wrapper._is_ok = False
-        return wrapper
-
-    def __bool__(self):
-        return self._is_ok
-
-    def unwrap(self) -> T:
-        return self.value
-
-
 def sort_units_by_proper_order(units: list[UnitType]):
     units = sorted(
         list(units),
@@ -103,7 +75,7 @@ def print_units_info(units: Iterable[UnitType]):
     print("-")
 
 
-def target_menu_template(actor: UnitType, units: Iterable[UnitType]):
+def target_menu_template(units: Iterable[UnitType]):
     """Returns a menu that can be used to select the target of `units`.
     The callback of each option is set to a function that returns the index of the unit in `units`."""
     target_menu = TextMenu()
@@ -113,29 +85,6 @@ def target_menu_template(actor: UnitType, units: Iterable[UnitType]):
             target.name, tag="target", callback=lambda target_index=i: target_index
         )
     return target_menu
-
-
-def inquire_typed_value[T](
-    prompt, type_: type[T], default_value: Optional[T] = None, ask_cancel = True, prompt_symbol=">"
-) -> PromptResult[T]:
-    while True:
-        try:
-            display_default = f"(デフォルト={default_value})" if default_value else ""
-            value = input(f"{prompt}{display_default}{prompt_symbol}")
-            if value == "":
-                if default_value:
-                    return PromptResult.Ok(default_value)
-            value = type_(value)
-        except ValueError:
-            if ask_cancel:
-                if ask_yes_no("やめる？"):
-                    return PromptResult.Cancel()
-                else:
-                    continue
-            else:
-                continue
-        else:
-            return PromptResult.Ok(value)
 
 
 def inquire_turn_action() -> PromptResult[TurnActionType]:
@@ -158,10 +107,8 @@ def inquire_turn_action() -> PromptResult[TurnActionType]:
         return PromptResult.Ok(TurnActionType(actions_menu.current_selection()[0]))
 
 
-def inquire_target(
-    actor: UnitType, units_on_battlefield: Sequence[UnitType]
-) -> PromptResult[UnitType]:
-    target_menu = target_menu_template(actor, units_on_battlefield)
+def inquire_target(units_on_battlefield: Sequence[UnitType]) -> PromptResult[UnitType]:
+    target_menu = target_menu_template(units_on_battlefield)
     for i, option in enumerate(target_menu.options.values()):
         print(f"{i}:{option["text"]}")
     if command := inquire_typed_value("番号を入力して選択", int):
@@ -173,11 +120,6 @@ def inquire_target(
     return PromptResult.Ok(
         units_on_battlefield[target_menu.execute_current_selection()]
     )
-
-
-def ask_yes_no(question: str, prompt_symbol=">"):
-    answer = input(f"{question}(y/n)" + prompt_symbol)
-    return True if answer in ("y", "") else False
 
 
 def prompt_spell_generator(
@@ -295,7 +237,6 @@ def combat_loop_cli(
                             print("誰に？")
                             if not (
                                 target := inquire_target(
-                                    actor=unit,
                                     units_on_battlefield=units_on_battlefield,
                                 )
                             ):
@@ -330,7 +271,6 @@ def combat_loop_cli(
                                             continue
                                         print("誰に？")
                                         if target := inquire_target(
-                                            actor=unit,
                                             units_on_battlefield=units_on_battlefield,
                                         ):
                                             turn_action_queue.append(
@@ -352,9 +292,12 @@ def combat_loop_cli(
         for turn_action in turn_action_queue:
             # print(turn_action)
             match turn_action.type_:
+                case TurnActionType.SPELL:
+                    print(f"{turn_action.actor.name}の{turn_action.spell_name}！")
+                    print("未実装！")
                 case TurnActionType.CLOSE_COMBAT:
-                     print(f"{turn_action.actor.name}の攻撃！")
-                     for target in turn_action.targets:
+                    print(f"{turn_action.actor.name}の攻撃！")
+                    for target in turn_action.targets:
                         if target.hp.current <= 0:
                             continue
                         damage = random.randint(
@@ -365,11 +308,20 @@ def combat_loop_cli(
                                 print(
                                     f"{turn_action.actor.name}は自身を傷つけようとしたが威力が足りなかった！"
                                 )
-                            elif target.physical_ability > turn_action.actor.physical_ability:
+                            elif (
+                                target.physical_ability
+                                > turn_action.actor.physical_ability
+                            ):
                                 print(f"{target.name}は攻撃を弾いた！")
-                            elif target.physical_ability < turn_action.actor.physical_ability:
+                            elif (
+                                target.physical_ability
+                                < turn_action.actor.physical_ability
+                            ):
                                 print(f"{target.name}は攻撃を躱した！")
-                            elif target.physical_ability == turn_action.actor.physical_ability:
+                            elif (
+                                target.physical_ability
+                                == turn_action.actor.physical_ability
+                            ):
                                 print(f"{target.name}は攻撃を受け止めた！")
                             damage = 0
                         else:

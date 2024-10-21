@@ -28,7 +28,7 @@ from mergic import (
     Scene,
     TextMenu,
 )
-from mergic.ui import (
+from mergic.gui import (
     MenuUICursor,
     MenuUICursorStyle,
     MenuUIHighlightStyle,
