@@ -1,35 +1,36 @@
 import unittest
 
 from mergic import wizard
+from mergic.wizard import OwnedStatusEffects, SpellTrait, StatusEffect, StatusEffectContent
 
 
 class TestWizard(unittest.TestCase):
     def test_magic(self):
         with self.assertRaises(ValueError):
-            wizard.generate_magic(10_000_000_000, 1)
+            wizard.spell_factory.generate(10_000_000_000, 1)
         self.assertSetEqual(
             set(
                 [
-                    "addition",
+                    SpellTrait.HEAL,
                 ]
             ),
-            wizard.generate_magic(2, 1).traits,
+            wizard.spell_factory.generate(2, 1).traits,
         )
         self.assertSetEqual(
-            set(["subtraction", "temptation", "drowsiness"]),
-            wizard.generate_magic(1001, 1).traits,
+            set([SpellTrait.DAMAGE, SpellTrait.TEMPTATION, SpellTrait.DROWSINESS]),
+            wizard.spell_factory.generate(1001, 1).traits,
         )
         self.assertSetEqual(
-            set(["addition", "confusion"]),
-            wizard.generate_magic(10, 1).traits,
+            set([SpellTrait.HEAL, SpellTrait.CONFUSION]),
+            wizard.spell_factory.generate(10, 1).traits,
         )
-        print(wizard.generate_magic(1, 1).traits)
+        print(wizard.spell_factory.generate(1, 1).traits)
         self.assertSetEqual(
             {
-                "drowsiness",
-                "subtraction",
+                SpellTrait.DROWSINESS,
+                SpellTrait.DAMAGE,
             },
-            wizard.generate_magic(1, 1).traits,
+            wizard.spell_factory.generate(1, 1).traits,
         )
 
     def test_vampire_number(self):
@@ -76,7 +77,33 @@ class TestWizard(unittest.TestCase):
             self.assertFalse(
                 wizard.is_prime_number(testcase), f"testcase num: {testcase}"
             )
-        prime_numbers = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97]
+        prime_numbers = [
+            2,
+            3,
+            5,
+            7,
+            11,
+            13,
+            17,
+            19,
+            23,
+            29,
+            31,
+            37,
+            41,
+            43,
+            47,
+            53,
+            59,
+            61,
+            67,
+            71,
+            73,
+            79,
+            83,
+            89,
+            97,
+        ]
         for testcase in prime_numbers:
             self.assertTrue(
                 wizard.is_prime_number(testcase), f"testcase num: {testcase}"
@@ -205,7 +232,7 @@ class TestWizard(unittest.TestCase):
             [[1, 2], [3, 4], [5, 6, 7]],
             [list(chunk) for chunk in wizard.split_into_chunks(collection_, 3)],
         )
-    
+
     def test_split_number_into_digits(self):
         self.assertEqual(
             [[1, 2, 3], 3],
@@ -219,3 +246,8 @@ class TestWizard(unittest.TestCase):
             [[1, 2, 3, 4, 5, 6, 7], 7],
             list(wizard.split_number_into_digits(1234567)),
         )
+
+class TestStatusEffect(unittest.TestCase):
+    def test_owned_status_effect(self):
+        status_effects = OwnedStatusEffects()
+        status_effects[StatusEffect.CONFUSING].append(StatusEffectContent(turns_remaining=1))

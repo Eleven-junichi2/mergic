@@ -1,3 +1,4 @@
+from collections import UserDict
 from dataclasses import dataclass, field
 from enum import Enum, Flag, StrEnum, auto
 from math import log10
@@ -22,8 +23,8 @@ class AlchemicalElement(StrEnum):
 
 
 class SpellTrait(StrEnum):
-    ADDITION = auto()
-    SUBTRACTION = auto()
+    HEAL = auto()
+    DAMAGE = auto()
     CONFUSION = auto()
     TEMPTATION = auto()
     VAMPIRE = auto()
@@ -49,6 +50,26 @@ class StatusEffect(StrEnum):
     SLEEPING = auto()
     STUN = auto()
     TERRIFIED = auto()
+
+
+@dataclass
+class StatusEffectContent:
+    turns_remaining: int
+    strength: Optional[float] = None
+
+
+@dataclass
+class OwnedStatusEffects(UserDict[StatusEffect, list[StatusEffectContent]]):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def __getitem__(self, key: StatusEffect) -> list[StatusEffectContent]:
+        while True:
+            try:
+                item = super().__getitem__(key)
+                return item
+            except KeyError:
+                self[key] = []
 
 
 BuffVariants = (StatusEffect.BURNING, StatusEffect.FROSTBITED, StatusEffect.FROZEN)
@@ -294,14 +315,14 @@ class spell_factory:
             magic.alchemical_elements.add(AlchemicalElement.DARK)
         if integer_spell % 2 == 0:
             found_inttype |= IntTypeBitmaskMarker.EVEN.value
-            magic.traits.add(SpellTrait.ADDITION)
+            magic.traits.add(SpellTrait.HEAL)
             if integer_spell < 0:
                 magic.alchemical_elements.add(AlchemicalElement.COLD)
             if integer_spell % 5 == 0:
                 magic.traits.add(SpellTrait.CONFUSION)
         if integer_spell % 2 != 0:
             found_inttype |= IntTypeBitmaskMarker.ODD.value
-            magic.traits.add(SpellTrait.SUBTRACTION)
+            magic.traits.add(SpellTrait.DAMAGE)
             if integer_spell < 0:
                 magic.alchemical_elements.add(AlchemicalElement.HEAT)
             if integer_spell % 1001 == 0:

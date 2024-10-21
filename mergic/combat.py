@@ -20,7 +20,13 @@ from mergic.components import (
     HasStatusEffects,
     HasResistance,
 )
-from mergic.wizard import AlchemicalElement, SpellRecord, SpellTrait, StatusEffect
+from mergic.wizard import (
+    AlchemicalElement,
+    SpellRecord,
+    SpellTrait,
+    StatusEffect,
+    StatusEffectContent,
+)
 
 CombatUnit: TypeAlias = (
     HasName
@@ -80,7 +86,7 @@ def print_units_info(units: Iterable[CombatUnit]):
     print("-")
     for unit in units:
         print(
-            f"{unit.name}: HP={unit.hp.current}/{unit.hp.max_} Mana={unit.mana.current}/{unit.mana.max_} PhysicalAbility={unit.physical_ability} StatusEffects={unit.status_effects}"
+            f"{unit.name}: HP={unit.hp.current}/{unit.hp.max_} Mana={unit.mana.current}/{unit.mana.max_} PhysicalAbility={unit.physical_ability} StatusEffects={unit.status_effects.items()}"
         )
     print("-")
 
@@ -285,7 +291,7 @@ def prompt_close_combat(
     print("誰に？")
     if not (
         target := inquire_target(
-            units=units,
+            units=list(query_living_units(units)),
         )
     ):
         return PromptResult.Cancel()
@@ -351,9 +357,9 @@ def spell_processor(turn_action: TurnAction) -> BoolToToggleLoop:
     for target in query_living_units(turn_action.targets):
         actor.mana.current -= actors_magic.strength
         target_hp_delta = 0
-        if SpellTrait.ADDITION in actors_magic.traits:
+        if SpellTrait.HEAL in actors_magic.traits:
             target_hp_delta += actors_magic.strength
-        if SpellTrait.SUBTRACTION in actors_magic.traits:
+        if SpellTrait.DAMAGE in actors_magic.traits:
             target_hp_delta -= actors_magic.strength
         for element, resistance_value in target.resistances.items():
             if element in actors_magic.alchemical_elements:
@@ -361,16 +367,19 @@ def spell_processor(turn_action: TurnAction) -> BoolToToggleLoop:
         if AlchemicalElement.LIGHT in actors_magic.alchemical_elements:
             if random.random() < 0.22:
                 print(f"{target.name}は強い光に目が眩んだ！")
-                target.status_effects.setdefault(StatusEffect.BLIND)
                 target.status_effects[StatusEffect.BLIND].append(
-                    actors_magic.strength // 3
+                    StatusEffectContent(
+                        turns_remaining=random.randint(1, actors_magic.strength // 3),
+                        strength=0.5,
+                    ),
                 )
         if AlchemicalElement.DARK in actors_magic.alchemical_elements:
             if random.random() < 0.22:
                 print(f"{target.name}は恐怖に怯え始めた！")
-                target.status_effects.setdefault(StatusEffect.TERRIFIED)
                 target.status_effects[StatusEffect.TERRIFIED].append(
-                    actors_magic.strength // 3
+                    StatusEffectContent(
+                        turns_remaining=random.randint(1, actors_magic.strength // 3)
+                    ),
                 )
         if AlchemicalElement.HEAT in actors_magic.alchemical_elements:
             if StatusEffect.BURNING in actor.status_effects:
@@ -378,46 +387,54 @@ def spell_processor(turn_action: TurnAction) -> BoolToToggleLoop:
                 target_hp_delta *= 2
             if random.random() < 0.22:
                 print(f"{target.name}は炎上し始めた！")
-                target.status_effects.setdefault(StatusEffect.BURNING)
+
                 target.status_effects[StatusEffect.BURNING].append(
-                    actors_magic.strength // 3
+                    StatusEffectContent(
+                        turns_remaining=random.randint(1, actors_magic.strength // 3),
+                        strength=actors_magic.strength // 2,
+                    ),
                 )
                 if StatusEffect.FROZEN in target.status_effects:
-                    # target.status_effects.setdefault(StatusEffect.FROSTBITED)
                     target.status_effects[StatusEffect.FROZEN].clear()
                     print(f"{target.name}は解凍された！")
         if AlchemicalElement.COLD in actors_magic.alchemical_elements:
             if StatusEffect.FROSTBITED in actor.status_effects:
                 actor.status_effects.setdefault(StatusEffect.FROZEN)
                 actor.status_effects[StatusEffect.FROZEN].append(
-                    actors_magic.strength // 3
+                    StatusEffectContent(
+                        turns_remaining=random.randint(1, actors_magic.strength // 3),
+                        strength=actors_magic.strength // 2,
+                    ),
                 )
                 print(f"{actor.name}は凍結した！")
             if random.random() < 0.22:
                 print(f"{target.name}は凍傷を負った！")
-                target.status_effects.setdefault(StatusEffect.FROSTBITED)
                 target.status_effects[StatusEffect.FROSTBITED].append(
-                    actors_magic.strength // 3
+                    StatusEffectContent(
+                        turns_remaining=random.randint(1, actors_magic.strength // 3),
+                        strength=actors_magic.strength // 2,
+                    ),
                 )
         if target_hp_delta < 0:
             print(f"{target.name}に{abs(target_hp_delta)}ダメージ！")
-            if SpellTrait.VAMPIRE:
+            if SpellTrait.VAMPIRE in actors_magic.traits:
                 print(f"{target.name}のHPをダメージ分吸収した！")
         elif target_hp_delta > 0:
-            if SpellTrait.VAMPIRE:
+            if SpellTrait.VAMPIRE in actors_magic.traits:
                 print(f"{actor.name}のHPが{target.name}に分け与えられた！")
             print(f"{target.name}のHPを{abs(target_hp_delta)}回復！")
-        if SpellTrait.VAMPIRE:
+        if SpellTrait.VAMPIRE in actors_magic.traits:
             actor.hp.current -= target_hp_delta
         target.hp.current += target_hp_delta
         if SpellTrait.CONFUSION in actors_magic.traits:
             print(f"{target.name}は混乱した！")
-            target.status_effects.setdefault(StatusEffect.CONFUSING)
+
             target.status_effects[StatusEffect.CONFUSING].append(
-                random.randint(1, actors_magic.strength // 3)
+                StatusEffectContent(
+                    turns_remaining=random.randint(1, actors_magic.strength // 3)
+                ),
             )
         if SpellTrait.STUN in actors_magic.traits:
-            target.status_effects.setdefault(StatusEffect.STUN)
             target.status_effects[StatusEffect.STUN].append(1)
         if SpellTrait.DISPEL in actors_magic.traits:
             print(f"{target.name}のバフが解除された！")
@@ -431,30 +448,39 @@ def spell_processor(turn_action: TurnAction) -> BoolToToggleLoop:
                     target.status_effects[status_effect].clear()
         if SpellTrait.DROWSINESS in actors_magic.traits:
             print(f"{target.name}は眠気を感じ始めた…")
-            target.status_effects.setdefault(StatusEffect.DROWSY)
+
             target.status_effects[StatusEffect.DROWSY].append(
-                random.randint(1, actors_magic.strength // 3)
+                StatusEffectContent(
+                    turns_remaining=random.randint(1, actors_magic.strength // 3)
+                ),
             )
         if SpellTrait.SLEEP in actors_magic.traits:
             print(f"{target.name}は眠り始めた！")
-            target.status_effects.setdefault(StatusEffect.SLEEPING)
+
             target.status_effects[StatusEffect.SLEEPING].append(
-                random.randint(1, actors_magic.strength // 3)
+                StatusEffectContent(
+                    turns_remaining=random.randint(1, actors_magic.strength // 3)
+                ),
             )
         if SpellTrait.POISON in actors_magic.traits:
             print(f"{target.name}は毒に侵された！")
-            target.status_effects.setdefault(StatusEffect.POISONED)
+
             target.status_effects[StatusEffect.POISONED].append(
-                random.randint(1, actors_magic.strength // 3)
+                StatusEffectContent(
+                    turns_remaining=random.randint(1, actors_magic.strength // 3),
+                    strength=0.1,
+                ),
             )
-        if SpellTrait.RANDOM_ELEMENTS:
+        if SpellTrait.RANDOM_ELEMENTS in actors_magic.traits:
             print("RANDOM_ELEMENTSは未実装だ！")
     return True
 
 
 def close_combat_processor(turn_action: TurnAction) -> BoolToToggleLoop:
-    print(f"{turn_action.actor.name}の攻撃！")
-    for target in query_living_units(turn_action.targets):
+    targets = list(query_living_units(turn_action.targets))
+    if len(targets) > 0:
+        print(f"{turn_action.actor.name}の攻撃！")
+    for target in targets:
         damage = random.randint(0, turn_action.actor.physical_ability) - random.randint(
             0, target.physical_ability
         )
