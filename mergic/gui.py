@@ -302,3 +302,36 @@ class TextInputUI:
             if event.key == pygame.K_BACKSPACE:
                 self.text = self.text[:-1]
                 # print(f"afteredit: self.text='{self.text}'")
+
+class FrameSide(Enum):
+    TOP = auto()
+    BOTTOM = auto()
+    LEFT = auto()
+    RIGHT = auto()
+
+class FrameCorner(Enum):
+    TOP_LEFT = auto()
+    TOP_RIGHT = auto()
+    BOTTOM_LEFT = auto()
+    BOTTOM_RIGHT = auto()
+
+class FrameBGStyle(Enum):
+    TILING = auto()
+    STRETCH = auto()
+
+@dataclass
+class FrameStyle:
+    edge: dict[FrameSide | FrameCorner, pygame.surface.Surface]
+    bg: pygame.surface.Surface
+    bg_style: FrameBGStyle = FrameBGStyle.TILING
+
+class MsgBoxUI:
+    def __init__(
+        self,
+        font: pygame.freetype.Font,
+        frame_style: FrameStyle):
+        self.font = font
+        self.frame_style = frame_style
+    
+    def render(self) -> pygame.surface.Surface:
+        pass

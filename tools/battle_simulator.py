@@ -8,7 +8,7 @@ from mergic.components import HP
 from mergic.entities import Mob, Player
 from mergic.wizard import AlchemicalElement, Magic, SpellRecord
 from mergic.status import Mana, OwnedStatusEffects
-from mergic import combat
+from mergic import combat, combat_cli
 
 
 def main():
@@ -80,20 +80,20 @@ def main():
                 resistances={},
             )
         )
-    combat.CombatLoopCLI().run(
+    combat_cli.CombatLoopCLI().run(
         units_on_battlefield=world.entities_for_components(
             *typing.get_args(combat.CombatUnit)
         ),
         manual_control_mob_types=("player_master", "player_apprentice"),
         prompts_for_manual_control_mobs={
-            combat.TurnActionType.CLOSE_COMBAT: combat.prompt_close_combat,
-            combat.TurnActionType.SPELL: combat.prompt_spell,
-            combat.TurnActionType.ESCAPE: combat.prompt_escape,
+            combat.TurnActionType.CLOSE_COMBAT: combat_cli.prompt_close_combat,
+            combat.TurnActionType.SPELL: combat_cli.prompt_spell,
+            combat.TurnActionType.ESCAPE: combat_cli.prompt_escape,
         },
         turn_action_processors={
-            combat.TurnActionType.CLOSE_COMBAT: combat.close_combat_processor,
-            combat.TurnActionType.SPELL: combat.spell_processor,
-            combat.TurnActionType.ESCAPE: combat.escape_processor,
+            combat.TurnActionType.CLOSE_COMBAT: combat_cli.close_combat_processor,
+            combat.TurnActionType.SPELL: combat_cli.spell_processor,
+            combat.TurnActionType.ESCAPE: combat_cli.escape_processor,
         },
         instant_turn_action_types={combat.TurnActionType.ESCAPE}
     )

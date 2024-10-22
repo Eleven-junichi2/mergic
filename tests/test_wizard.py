@@ -1,7 +1,8 @@
 import unittest
 
 from mergic import wizard
-from mergic.wizard import OwnedStatusEffects, SpellTrait, StatusEffect, StatusEffectContent
+from mergic.wizard import SpellTrait
+from mergic.status import StatusEffect, StatusEffectContent, OwnedStatusEffects
 
 
 class TestWizard(unittest.TestCase):
@@ -247,7 +248,10 @@ class TestWizard(unittest.TestCase):
             list(wizard.split_number_into_digits(1234567)),
         )
 
+
 class TestStatusEffect(unittest.TestCase):
     def test_owned_status_effect(self):
         status_effects = OwnedStatusEffects()
-        status_effects[StatusEffect.CONFUSING].append(StatusEffectContent(turns_remaining=1))
+        status_effects[StatusEffect.CONFUSING].append(
+            StatusEffectContent(turns_remaining=1)
+        )

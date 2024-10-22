@@ -103,8 +103,8 @@ class CombatPhase(Enum):
 class CombatLoopConfig:
     units_on_battlefield: Iterable[CombatUnit]
     turn_action_deciders: dict[MobTypeStr, Callable[[CombatUnit], TurnAction]]
-    turn_action_processors: dict[TurnActionType, Callable[[TurnAction]]]
-    manual_mob_types: Iterable[MobTypeStr] = field(default_factory=Iterable)
+    turn_action_processors: dict[TurnActionType, Callable[[TurnAction], None]]
+    manual_mob_types: Iterable[MobTypeStr] = field(default_factory=list)
     manual_turn_action_deciders: dict[
         MobTypeStr, Callable[[CombatUnit, Iterable[CombatUnit]], TurnAction]
     ] = field(default_factory=dict)
@@ -115,16 +115,18 @@ class CombatLoop:
     def __init__(self, config: CombatLoopConfig):
         self.config: CombatLoopConfig = config
         self.phase: CombatPhase = CombatPhase.ACTION_DECISION
+        self.units = sorted_units_by_physical_ability(list(self.config.units_on_battlefield))
+        self.turn_action_queue: deque[TurnAction] = deque()
 
-    def update(self):
-        units = sorted_units_by_physical_ability(list(self.config.units_on_battlefield))
-        turn_action_queue: deque[TurnAction] = deque()
+    def update(self, debug=False):
+        print("!!!!!!!!!!")
+        if debug:
+            print("phase: ", self.phase)
         match self.phase:
             case CombatPhase.ACTION_DECISION:
-                for unit in query_living_units(units):
+                for unit in query_living_units(self.units):
                     if unit.mob_type in (self.config.manual_mob_types):
                         turn_action = self.config.manual_turn_action_deciders
-                        yield
                     else:
                         turn_action = self.config.turn_action_deciders[unit.mob_type](
                             unit
@@ -133,7 +135,7 @@ class CombatLoop:
                         self.phase = CombatPhase.EXECUTE_ACTION
                 self.phase = CombatPhase.EXECUTE_ACTION
             case CombatPhase.EXECUTE_ACTION:
-                for turn_action in turn_action_queue:
+                for turn_action in self.turn_action_queue:
                     self.config.turn_action_processors[turn_action.type_](turn_action)
-                    yield
-                turn_action_queue.clear()
+                self.turn_action_queue.clear()
+        yield self.phase
