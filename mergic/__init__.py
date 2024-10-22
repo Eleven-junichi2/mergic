@@ -15,13 +15,10 @@ from typing import (
     get_args,
 )
 from dataclasses import dataclass, field
-from functools import partial
 import os
 
 import pygame
 import pygame.freetype
-
-entityclass = partial(dataclass, slots=True)
 
 
 class AssetFinder:

@@ -7,7 +7,7 @@ from mergic import wizard
 from mergic.components import HP
 from mergic.entities import Mob, Player
 from mergic.wizard import AlchemicalElement, Magic, SpellRecord
-from mergic.status import Mana, OwnedStatusEffects,
+from mergic.status import Mana, OwnedStatusEffects
 from mergic import combat
 
 

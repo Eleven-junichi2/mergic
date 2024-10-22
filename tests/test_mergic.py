@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import get_args
 import unittest
 
-from mergic import ECS, GameMap, TextMenu, entityclass, GameWorld
+from mergic import ECS, GameMap, TextMenu, GameWorld
 
 
 @dataclass
@@ -15,16 +15,16 @@ class DummyComponent2:
     pass
 
 
-@entityclass
+@dataclass(slots=True)
 class DummyEntity(DummyComponent):
     pass
 
 
-@entityclass
+@dataclass(slots=True)
 class DummyEntity2(DummyComponent, DummyComponent2):
     pass
 
-@entityclass
+@dataclass(slots=True)
 class DummyEntity3(DummyComponent, DummyComponent2):
     pass
 

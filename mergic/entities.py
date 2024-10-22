@@ -1,4 +1,4 @@
-from mergic import entityclass
+from dataclasses import dataclass
 from mergic.components import (
     HasActions,
     HasCoordinate,
@@ -21,7 +21,7 @@ from mergic.components import (
 )
 
 
-@entityclass
+@dataclass(slots=True)
 class Player(
     HasMobType,
     HasName,
@@ -45,7 +45,7 @@ class Player(
     pass
 
 
-@entityclass
+@dataclass(slots=True)
 class Mob(
     HasMobType,
     HasName,
