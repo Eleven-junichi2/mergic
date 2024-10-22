@@ -329,9 +329,13 @@ class MsgBoxUI:
     def __init__(
         self,
         font: pygame.freetype.Font,
-        frame_style: FrameStyle):
+        frame_style: FrameStyle,
+        width: int,
+        height: int):
         self.font = font
         self.frame_style = frame_style
+        self.width = width
+        self.height = height
     
     def render(self) -> pygame.surface.Surface:
         pass

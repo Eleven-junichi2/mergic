@@ -1,0 +1,285 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="1280"
+   height="720"
+   viewBox="0 0 338.66667 190.5"
+   version="1.1"
+   id="svg1"
+   inkscape:version="1.3.2 (091e20e, 2023-11-25, custom)"
+   sodipodi:docname="戦闘画面案.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#000000"
+     bordercolor="#999999"
+     borderopacity="1"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0"
+     inkscape:pagecheckerboard="true"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="px"
+     shape-rendering="auto"
+     showgrid="false"
+     inkscape:zoom="0.75958736"
+     inkscape:cx="597.69293"
+     inkscape:cy="499.61337"
+     inkscape:window-width="1920"
+     inkscape:window-height="1009"
+     inkscape:window-x="-8"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1">
+    <inkscape:grid
+       id="grid1"
+       units="px"
+       originx="0"
+       originy="0"
+       spacingx="0.26458334"
+       spacingy="0.26458333"
+       empcolor="#0099e5"
+       empopacity="0.30196078"
+       color="#0099e5"
+       opacity="0.14901961"
+       empspacing="5"
+       dotted="false"
+       gridanglex="30"
+       gridanglez="30"
+       visible="false" />
+  </sodipodi:namedview>
+  <defs
+     id="defs1">
+    <rect
+       x="447.61145"
+       y="351.50664"
+       width="143.49896"
+       height="51.343666"
+       id="rect5" />
+    <rect
+       x="202.74166"
+       y="319.91054"
+       width="304.11248"
+       height="139.54945"
+       id="rect3" />
+    <rect
+       x="152.71449"
+       y="265.93386"
+       width="136.91644"
+       height="104.00384"
+       id="rect2" />
+  </defs>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <rect
+       style="fill:#000000;stroke-width:0.428837"
+       id="rect1"
+       width="338.66666"
+       height="190.5"
+       x="0"
+       y="0"
+       sodipodi:insensitive="true" />
+    <rect
+       style="fill:#ff00ff;stroke-width:0.264583"
+       id="rect10"
+       width="25.4"
+       height="25.4"
+       x="116.34058"
+       y="158.13959" />
+    <rect
+       style="fill:#ff00ff;stroke-width:0.264583"
+       id="rect10-7"
+       width="25.4"
+       height="25.4"
+       x="142.95618"
+       y="158.37598" />
+    <rect
+       style="fill:#ff00ff;stroke-width:0.264583"
+       id="rect10-5"
+       width="25.4"
+       height="25.4"
+       x="169.03688"
+       y="158.32256" />
+    <rect
+       style="fill:#ff00ff;stroke-width:0.264583"
+       id="rect10-8"
+       width="25.4"
+       height="25.4"
+       x="195.64574"
+       y="158.33591" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8.46667px;font-family:'Meiryo UI';-inkscape-font-specification:'Meiryo UI, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#ffffff;stroke-width:0.264583"
+       x="197.15201"
+       y="168.24101"
+       id="text5"
+       inkscape:label="text5"><tspan
+         sodipodi:role="line"
+         id="tspan5"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8.46667px;font-family:'Meiryo UI';-inkscape-font-specification:'Meiryo UI, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;stroke-width:0.264583"
+         x="197.15201"
+         y="168.24101">逃げる</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8.46667px;font-family:'Meiryo UI';-inkscape-font-specification:'Meiryo UI, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#ffffff;stroke-width:0.264583"
+       x="172.07259"
+       y="168.24101"
+       id="text6"><tspan
+         sodipodi:role="line"
+         style="stroke-width:0.264583"
+         x="172.07259"
+         y="168.24101"
+         id="tspan7">道具</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8.46667px;font-family:'Meiryo UI';-inkscape-font-specification:'Meiryo UI, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#ffffff;stroke-width:0.264583"
+       x="118.43052"
+       y="167.19606"
+       id="text8"><tspan
+         sodipodi:role="line"
+         style="stroke-width:0.264583"
+         x="118.43052"
+         y="167.19606"
+         id="tspan9">足掻く</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8.46667px;font-family:'Meiryo UI';-inkscape-font-specification:'Meiryo UI, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#ffffff;stroke-width:0.264583"
+       x="146.99318"
+       y="167.19604"
+       id="text10"><tspan
+         sodipodi:role="line"
+         id="tspan10"
+         style="stroke-width:0.264583"
+         x="146.99318"
+         y="167.19604">呪文</tspan></text>
+    <rect
+       style="fill:#ff00ff;stroke-width:0.264583"
+       id="rect12"
+       width="148.16667"
+       height="148.16667"
+       x="93.699448"
+       y="6.6181765" />
+    <rect
+       style="fill:#ff00ff;stroke-width:0.264583"
+       id="rect13"
+       width="88.126251"
+       height="28.562656"
+       x="246.61417"
+       y="8.0114765" />
+    <rect
+       style="fill:#0000ff;stroke-width:0.176887"
+       id="rect14"
+       width="88.474571"
+       height="12.191377"
+       x="246.61415"
+       y="36.225807" />
+    <rect
+       style="fill:#0000ff;stroke-width:0.176887"
+       id="rect14-6"
+       width="88.474571"
+       height="12.191377"
+       x="3.4842644"
+       y="35.071941" />
+    <rect
+       style="fill:#ff00ff;stroke-width:0.264583"
+       id="rect15"
+       width="84.991325"
+       height="28.562656"
+       x="5.2248764"
+       y="6.2698517" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8.46667px;font-family:'Meiryo UI';-inkscape-font-specification:'Meiryo UI, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#ffffff;stroke-width:0.264583"
+       x="256.36725"
+       y="24.03443"
+       id="text16"><tspan
+         sodipodi:role="line"
+         id="tspan16"
+         style="stroke-width:0.264583;fill:#ffffff"
+         x="256.36725"
+         y="24.03443">顔グラ</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8.46667px;font-family:'Meiryo UI';-inkscape-font-specification:'Meiryo UI, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#ffffff;stroke-width:0.264583"
+       x="258.80554"
+       y="57.47364"
+       id="text17"><tspan
+         sodipodi:role="line"
+         id="tspan17"
+         style="stroke-width:0.264583"
+         x="258.80554"
+         y="57.47364" /></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8.46667px;font-family:'Meiryo UI';-inkscape-font-specification:'Meiryo UI, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#ffffff;stroke-width:0.264583"
+       x="283.53662"
+       y="19.854528"
+       id="text18"><tspan
+         sodipodi:role="line"
+         id="tspan18"
+         style="stroke-width:0.264583"
+         x="283.53662"
+         y="19.854528">HPバー</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8.46667px;font-family:'Meiryo UI';-inkscape-font-specification:'Meiryo UI, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#ffffff;stroke-width:0.264583"
+       x="284.23325"
+       y="29.607632"
+       id="text19"><tspan
+         sodipodi:role="line"
+         id="tspan19"
+         style="stroke-width:0.264583"
+         x="284.23325"
+         y="29.607632">Manaバー</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8.46667px;font-family:'Meiryo UI';-inkscape-font-specification:'Meiryo UI, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#ffffff;stroke-width:0.264583"
+       x="316.62753"
+       y="47.023884"
+       id="text21"><tspan
+         sodipodi:role="line"
+         id="tspan21"
+         style="stroke-width:0.264583"
+         x="316.62753"
+         y="47.023884">…</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:7.00555px;font-family:'Meiryo UI';-inkscape-font-specification:'Meiryo UI, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#ffffff;stroke-width:0.218923"
+       x="307.03314"
+       y="38.044209"
+       id="text22"
+       transform="scale(0.82742737,1.2085653)"><tspan
+         sodipodi:role="line"
+         id="tspan22"
+         style="fill:#ffffff;stroke-width:0.218923"
+         x="307.03314"
+         y="38.044209">statusEffeectアイコン</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8.46667px;font-family:'Meiryo UI';-inkscape-font-specification:'Meiryo UI, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#ffffff;stroke-width:0.264583"
+       x="265.77206"
+       y="60.95689"
+       id="text23"><tspan
+         sodipodi:role="line"
+         id="tspan23"
+         style="stroke-width:0.264583"
+         x="265.77206"
+         y="60.95689">プレイヤー側</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8.46667px;font-family:'Meiryo UI';-inkscape-font-specification:'Meiryo UI, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#ffffff;stroke-width:0.264583"
+       x="17.764578"
+       y="59.215263"
+       id="text24"><tspan
+         sodipodi:role="line"
+         id="tspan24"
+         style="stroke-width:0.264583"
+         x="17.764578"
+         y="59.215263">相手側</tspan></text>
+  </g>
+</svg>
