@@ -1,27 +1,22 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Optional
 
 import pygame
 
-from mergic.wizard import AlchemicalElement, Mana, SpellRecord, OwnedStatusEffects
+from mergic.wizard import AlchemicalElement, SpellRecord
+from mergic.status import OwnedStatusEffects, Mana, HP
 import mergic
 
 
 @dataclass
-class HP:
-    max_: int
-    current: int = field(init=False)
-
-    def __post_init__(self):
-        self.current = self.max_
-
-@dataclass
 class HasStatusEffects:
-    status_effects: OwnedStatusEffects # status_effect_variant: list_for_stack[int_for_remaining_turns]
+    status_effects: OwnedStatusEffects  # status_effect_variant: list_for_stack[int_for_remaining_turns]
+
 
 @dataclass
 class HasResistance:
-    resistances: dict[AlchemicalElement, float] # resistance_type: resistance_value
+    resistances: dict[AlchemicalElement, float]  # resistance_type: resistance_value
+
 
 @dataclass
 class HasMobType:

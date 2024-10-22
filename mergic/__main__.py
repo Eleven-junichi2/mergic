@@ -36,7 +36,7 @@ from mergic.gui import (
     MenuUIPageIndicatorStyle,
     TextInputUI,
 )
-from mergic.calculation_tools import calc_center_pos
+from mergic.utils import calc_center_pos
 from mergic.entities import Player
 
 # os.environ["SDL_IME_SHOW_UI"] = "1"

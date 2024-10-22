@@ -1,12 +1,9 @@
-from collections import UserDict
-from dataclasses import dataclass, field
-from enum import Enum, Flag, StrEnum, auto
+from dataclasses import dataclass
+from enum import Flag, StrEnum, auto
 from math import log10
 from itertools import permutations, islice
-from typing import Callable, Iterable, Optional, Unpack
-import time
+from typing import Iterable, Optional, Unpack
 import random
-import functools
 import asyncio
 import concurrent.futures
 
@@ -37,56 +34,6 @@ class SpellTrait(StrEnum):
     POISON = auto()
 
 
-class StatusEffect(StrEnum):
-    DOT = auto()
-    POISONED = auto()
-    CONFUSING = auto()
-    TEMPTED = auto()
-    BURNING = auto()
-    FROSTBITED = auto()
-    FROZEN = auto()
-    BLIND = auto()
-    DROWSY = auto()
-    SLEEPING = auto()
-    STUN = auto()
-    TERRIFIED = auto()
-
-
-@dataclass
-class StatusEffectContent:
-    turns_remaining: int
-    strength: Optional[float] = None
-
-
-@dataclass
-class OwnedStatusEffects(UserDict[StatusEffect, list[StatusEffectContent]]):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-    def __getitem__(self, key: StatusEffect) -> list[StatusEffectContent]:
-        while True:
-            try:
-                item = super().__getitem__(key)
-                return item
-            except KeyError:
-                self[key] = []
-
-
-BuffVariants = (StatusEffect.BURNING, StatusEffect.FROSTBITED, StatusEffect.FROZEN)
-DebuffVariants = (
-    StatusEffect.DOT,
-    StatusEffect.POISONED,
-    StatusEffect.TEMPTED,
-    StatusEffect.BURNING,
-    StatusEffect.FROSTBITED,
-    StatusEffect.FROZEN,
-    StatusEffect.BLIND,
-    StatusEffect.DROWSY,
-    StatusEffect.SLEEPING,
-    StatusEffect.STUN,
-)
-
-
 @dataclass
 class Magic:
     alchemical_elements: set[AlchemicalElement]
@@ -96,37 +43,11 @@ class Magic:
 
 
 @dataclass
-class Mana:
-    max_: int
-    current: int = field(init=False)
-
-    def __post_init__(self):
-        self.current = self.max_
-
-
-@dataclass
 class SpellRecord:
     magic: Magic
     memo: str = ""
 
 
-def measure_time_performance(func: Callable):
-    @functools.wraps(func)
-    def wrapper(*args, **kwargs):
-        start_time = time.perf_counter_ns()
-        print(f"run Func {func.__name__}")
-        result = func(*args, **kwargs)
-        end_time = time.perf_counter_ns()
-        time.perf_counter()
-        print(
-            f"Func {func.__name__} took {(end_time - start_time)/(10**9):.9f} seconds, result={result}"
-        )
-        return result
-
-    return wrapper
-
-
-# @measure_time_performance
 def is_prime_number(number: int):
     return sympy.isprime(number)
 
@@ -138,12 +59,10 @@ def join_digits(digits: Iterable):
     return joined
 
 
-# @measure_time_performance
 async def concurrently_join_digits(*digits_iter: Unpack[Iterable]):
     loop = asyncio.get_running_loop()
     with concurrent.futures.ThreadPoolExecutor() as pool:
         return await asyncio.gather(
-            # pool.map(join_digits, digits_iter)
             *[loop.run_in_executor(pool, join_digits, digits) for digits in digits_iter]
         )
 
@@ -173,7 +92,6 @@ def split_into_chunks(
     )
 
 
-# @measure_time_performance
 def split_number_into_digits(number: int):
     """Splits a number into its individual digits. Returns the digits and the length of the digits."""
     if number == 0:
@@ -188,7 +106,6 @@ def _verify_is_digit_split_product_vampire_number_fangs(
     number, digits_list, digit_length
 ):
     for digits_pattern in digits_list:
-        # print(digits_pattern)
         left_digits = digits_pattern[: digit_length // 2]
         right_digits = digits_pattern[digit_length // 2 :]
         if left_digits[-1] + right_digits[-1] == 0:
@@ -198,7 +115,6 @@ def _verify_is_digit_split_product_vampire_number_fangs(
             return True
 
 
-# @measure_time_performance
 def is_vampire_number(number: int) -> bool:
     """TODO: improve algorithm"""
     digits, digit_length = split_number_into_digits(number)
@@ -221,7 +137,6 @@ def is_vampire_number(number: int) -> bool:
     return any(results)
 
 
-# @measure_time_performance
 def is_strobogrammatic_number(
     number: int, symmetrical_nums=(0, 1, 8), symmetrical_pairs=((6, 9),)
 ):
@@ -272,7 +187,6 @@ class IntTypeBitmaskMarker(Flag):
     STROBOGRAMMATIC = auto()
 
 
-# @measure_time_performance
 class spell_factory:
     integer_spell_max = 10**9
 
@@ -345,16 +259,13 @@ def auto_name(magic: Magic, language_code="en"):
     element_or_trait_names = [str(element) for element in magic.alchemical_elements] + [
         str(trait) for trait in magic.traits
     ]
+    """Generate string based on the given magic's elements and traits."""
     element_or_trait_names_size = len(element_or_trait_names)
     random.shuffle(element_or_trait_names)
-    # print(element_or_trait_names, "size:", element_or_trait_names_size)
     for i, element_or_trait_name in enumerate(element_or_trait_names):
-        # print("name:", element_or_trait_name, "name length:", len(element_or_trait_name))
         start = i * (len(element_or_trait_name) // element_or_trait_names_size)
         end_ = (i + 1) * (len(element_or_trait_name) // element_or_trait_names_size)
-        # print(start, "/", end_)
         part = element_or_trait_name[start:end_]
-        # print(part)
         name += part
     if language_code == "en":
         pass
@@ -380,22 +291,3 @@ def auto_description(magic, language_code="en"):
     else:
         raise NotImplementedError(f"{language_code} description is not supported.")
     return description
-
-
-def playground_cli():
-    print("Wizard's playground")
-    int_spell = int(input("integer spell: "))
-    strength = int(input("strength: "))
-    magic = spell_factory.generate(int_spell, strength)
-    print(magic.traits)
-    print(magic.alchemical_elements)
-    print(magic.strength)
-    print(magic.generator_integer)
-    for language_code in ("en", "ja"):
-        print(
-            f"auto-generated name({language_code}): ", auto_name(magic, language_code)
-        )
-
-
-if __name__ == "__main__":
-    playground_cli()
