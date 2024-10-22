@@ -4,7 +4,7 @@ from typing import Optional
 
 @dataclass(init=False)
 class PromptResult[T]:
-    """This class represents the result of a CLI prompt.
+    """This class represents the result of a User Selection on UI.
     The reason for wrapping the result in this class is to
     prevent values such as 0 and "" from being considered False."""
 

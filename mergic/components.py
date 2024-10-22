@@ -7,6 +7,9 @@ from mergic.wizard import AlchemicalElement, SpellRecord
 from mergic.status import OwnedStatusEffects, Mana, HP
 import mergic
 
+MobTypeStr = str
+FactionStr = str
+
 
 @dataclass
 class HasStatusEffects:
@@ -20,27 +23,27 @@ class HasResistance:
 
 @dataclass
 class HasMobType:
-    mob_type: str
+    mob_type: MobTypeStr
 
 
 @dataclass
 class HasHostileFactions:
-    hostile_factions: set[str]
+    hostile_factions: set[FactionStr]
 
 
 @dataclass
 class HasFriendlyFactions:
-    friendly_factions: set[str]
+    friendly_factions: set[FactionStr]
 
 
 @dataclass
 class HasHostileMobTypes:
-    hostile_mob_types: set[str]
+    hostile_mob_types: set[MobTypeStr]
 
 
 @dataclass
 class HasFriendlyMobTypes:
-    friendly_mob_types: set[str]
+    friendly_mob_types: set[MobTypeStr]
 
 
 @dataclass

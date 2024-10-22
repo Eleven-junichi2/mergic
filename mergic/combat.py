@@ -1,11 +1,11 @@
 from collections import deque
-from dataclasses import dataclass, field
-from enum import StrEnum, auto
+from dataclasses import dataclass
+from enum import Enum, StrEnum, auto
 import random
-from typing import Callable, Iterable, Optional, Sequence, Tuple, TypeAlias, Unpack
+from typing import Callable, Iterable, Optional, Sequence, Tuple, TypeAlias
 from mergic import TextMenu
 from mergic import wizard
-from mergic.cli import PromptResult, ask_yes_no, inquire_typed_value
+from mergic.ui import PromptResult, ask_yes_no, inquire_typed_value
 from mergic.components import (
     HasFriendlyFactions,
     HasHP,
@@ -19,13 +19,18 @@ from mergic.components import (
     HasFriendlyMobTypes,
     HasStatusEffects,
     HasResistance,
+    MobTypeStr
 )
 from mergic.wizard import (
     AlchemicalElement,
     SpellRecord,
     SpellTrait,
+)
+from mergic.status import (
     StatusEffect,
     StatusEffectContent,
+    DebuffVariants,
+    BuffVariants,
 )
 
 CombatUnit: TypeAlias = (
@@ -234,13 +239,52 @@ def query_dead_units(units: Iterable[CombatUnit]):
 
 BoolToToggleLoop = bool
 
+class CombatPhase(Enum):
+    ACTION_DECISION = auto()
+    EXECUTE_ACTION = auto()
+
+@dataclass
+class CombatLoopConfig:
+    units_on_battlefield: Iterable[CombatUnit]
+    manual_mob_types: Iterable[MobTypeStr]
+    turn_action_processors: dict[
+        TurnActionType, Callable[[TurnAction], BoolToToggleLoop]
+    ]
+    instant_turn_action_types: set[TurnActionType]
+    manual_turn_action_deciders: dict[MobTypeStr, Callable[[CombatUnit, Iterable[CombatUnit]], TurnAction]]
+    turn_action_deciders: dict[MobTypeStr, Callable[[CombatUnit], TurnAction]]
+
+class CombatLoop:
+    def __init__(self, config: CombatLoopConfig):
+        self.config: CombatLoopConfig = config
+        self.phase: CombatPhase = CombatPhase.ACTION_DECISION
+
+    def update(self):
+        units = sorted_units_by_physical_ability(list(self.config.units_on_battlefield))
+        turn_action_queue: deque[TurnAction] = deque()
+        match self.phase:
+            case CombatPhase.ACTION_DECISION:
+                for unit in query_living_units(units):
+                    if unit.mob_type in (self.config.manual_mob_types):
+                        turn_action = self.config.manual_turn_action_deciders
+                    else:
+                        turn_action = self.config.turn_action_deciders[unit.mob_type](unit)
+                    if turn_action.type_ in self.config.instant_turn_action_types:
+                        self.phase = CombatPhase.EXECUTE_ACTION
+                    yield
+                self.phase = CombatPhase.EXECUTE_ACTION
+            case CombatPhase.EXECUTE_ACTION:
+                for turn_action in turn_action_queue:
+                    self.config.turn_action_processors[turn_action.type_](turn_action)
+                    yield
+                turn_action_queue.clear()
 
 class CombatLoopCLI:
     @staticmethod
     def run(
         units_on_battlefield: Iterable[CombatUnit],
-        manual_control_mob_types: Iterable[str],
-        prompts_for_manual_control_mobs: dict[
+        manual_mob_types: Iterable[str],
+        prompts_for_manual_mobs: dict[
             TurnActionType,
             Callable[[CombatUnit, Iterable[CombatUnit]], PromptResult[TurnAction]],
         ],
@@ -256,13 +300,13 @@ class CombatLoopCLI:
         while running:
             print_units_info(units)
             for unit in query_living_units(units):
-                if unit.mob_type in manual_control_mob_types:
+                if unit.mob_type in manual_mob_types:
                     print(f"({unit.name}の番だ)")
                     while running:
                         turn_action_type = inquire_turn_action_type(
-                            prompts_for_manual_control_mobs.keys()
+                            prompts_for_manual_mobs.keys()
                         ).unwrap()
-                        if is_configured := prompts_for_manual_control_mobs[
+                        if is_configured := prompts_for_manual_mobs[
                             turn_action_type
                         ](unit, units):
                             if turn_action := is_configured.unwrap():
@@ -369,7 +413,9 @@ def spell_processor(turn_action: TurnAction) -> BoolToToggleLoop:
                 print(f"{target.name}は強い光に目が眩んだ！")
                 target.status_effects[StatusEffect.BLIND].append(
                     StatusEffectContent(
-                        turns_remaining=random.randint(1, actors_magic.strength // 3),
+                        turns_remaining=random.randint(
+                            1, 1 + actors_magic.strength // 3
+                        ),
                         strength=0.5,
                     ),
                 )
@@ -378,7 +424,9 @@ def spell_processor(turn_action: TurnAction) -> BoolToToggleLoop:
                 print(f"{target.name}は恐怖に怯え始めた！")
                 target.status_effects[StatusEffect.TERRIFIED].append(
                     StatusEffectContent(
-                        turns_remaining=random.randint(1, actors_magic.strength // 3)
+                        turns_remaining=random.randint(
+                            1, 1 + actors_magic.strength // 3
+                        )
                     ),
                 )
         if AlchemicalElement.HEAT in actors_magic.alchemical_elements:
@@ -390,7 +438,9 @@ def spell_processor(turn_action: TurnAction) -> BoolToToggleLoop:
 
                 target.status_effects[StatusEffect.BURNING].append(
                     StatusEffectContent(
-                        turns_remaining=random.randint(1, actors_magic.strength // 3),
+                        turns_remaining=random.randint(
+                            1, 1 + actors_magic.strength // 3
+                        ),
                         strength=actors_magic.strength // 2,
                     ),
                 )
@@ -402,7 +452,9 @@ def spell_processor(turn_action: TurnAction) -> BoolToToggleLoop:
                 actor.status_effects.setdefault(StatusEffect.FROZEN)
                 actor.status_effects[StatusEffect.FROZEN].append(
                     StatusEffectContent(
-                        turns_remaining=random.randint(1, actors_magic.strength // 3),
+                        turns_remaining=random.randint(
+                            1, 1 + actors_magic.strength // 3
+                        ),
                         strength=actors_magic.strength // 2,
                     ),
                 )
@@ -411,7 +463,9 @@ def spell_processor(turn_action: TurnAction) -> BoolToToggleLoop:
                 print(f"{target.name}は凍傷を負った！")
                 target.status_effects[StatusEffect.FROSTBITED].append(
                     StatusEffectContent(
-                        turns_remaining=random.randint(1, actors_magic.strength // 3),
+                        turns_remaining=random.randint(
+                            1, 1 + actors_magic.strength // 3
+                        ),
                         strength=actors_magic.strength // 2,
                     ),
                 )
@@ -439,12 +493,12 @@ def spell_processor(turn_action: TurnAction) -> BoolToToggleLoop:
         if SpellTrait.DISPEL in actors_magic.traits:
             print(f"{target.name}のバフが解除された！")
             for status_effect in target.status_effects.keys():
-                if status_effect in wizard.BuffVariants:
+                if status_effect in BuffVariants:
                     target.status_effects[status_effect].clear()
         if SpellTrait.PURIFY in actors_magic.traits:
             print(f"{target.name}のデバフが解除された！")
             for status_effect in target.status_effects.keys():
-                if status_effect in wizard.DebuffVariants:
+                if status_effect in DebuffVariants:
                     target.status_effects[status_effect].clear()
         if SpellTrait.DROWSINESS in actors_magic.traits:
             print(f"{target.name}は眠気を感じ始めた…")
