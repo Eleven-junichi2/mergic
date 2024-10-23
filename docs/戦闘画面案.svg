@@ -26,7 +26,7 @@
      shape-rendering="auto"
      showgrid="false"
      inkscape:zoom="0.75958736"
-     inkscape:cx="597.69293"
+     inkscape:cx="597.69294"
      inkscape:cy="499.61337"
      inkscape:window-width="1920"
      inkscape:window-height="1009"
@@ -86,82 +86,79 @@
        sodipodi:insensitive="true" />
     <rect
        style="fill:#ff00ff;stroke-width:0.264583"
-       id="rect10"
-       width="25.4"
-       height="25.4"
-       x="116.34058"
-       y="158.13959" />
+       id="rect9"
+       width="87.081268"
+       height="70.013344"
+       x="2.4382756"
+       y="117.38555" />
     <rect
-       style="fill:#ff00ff;stroke-width:0.264583"
-       id="rect10-7"
-       width="25.4"
-       height="25.4"
-       x="142.95618"
-       y="158.37598" />
-    <rect
-       style="fill:#ff00ff;stroke-width:0.264583"
-       id="rect10-5"
-       width="25.4"
-       height="25.4"
-       x="169.03688"
-       y="158.32256" />
-    <rect
-       style="fill:#ff00ff;stroke-width:0.264583"
-       id="rect10-8"
-       width="25.4"
-       height="25.4"
-       x="195.64574"
-       y="158.33591" />
+       style="fill:#ff00ff;stroke-width:0.802742"
+       id="rect10-5-9"
+       width="148.35875"
+       height="40.029652"
+       x="93.207855"
+       y="146.10602" />
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8.46667px;font-family:'Meiryo UI';-inkscape-font-specification:'Meiryo UI, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#ffffff;stroke-width:0.264583"
-       x="197.15201"
-       y="168.24101"
+       x="34.484188"
+       y="183.91563"
        id="text5"
        inkscape:label="text5"><tspan
          sodipodi:role="line"
          id="tspan5"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8.46667px;font-family:'Meiryo UI';-inkscape-font-specification:'Meiryo UI, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;stroke-width:0.264583"
-         x="197.15201"
-         y="168.24101">逃げる</tspan></text>
+         x="34.484188"
+         y="183.91563">逃げる</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8.46667px;font-family:'Meiryo UI';-inkscape-font-specification:'Meiryo UI, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#ffffff;stroke-width:0.264583"
-       x="172.07259"
-       y="168.24101"
+       x="36.574131"
+       y="150.82475"
        id="text6"><tspan
          sodipodi:role="line"
          style="stroke-width:0.264583"
-         x="172.07259"
-         y="168.24101"
+         x="36.574131"
+         y="150.82475"
          id="tspan7">道具</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8.46667px;font-family:'Meiryo UI';-inkscape-font-specification:'Meiryo UI, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#ffffff;stroke-width:0.264583"
-       x="118.43052"
-       y="167.19606"
+       x="35.18082"
+       y="138.63341"
        id="text8"><tspan
          sodipodi:role="line"
          style="stroke-width:0.264583"
-         x="118.43052"
-         y="167.19606"
+         x="35.18082"
+         y="138.63341"
          id="tspan9">足掻く</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8.46667px;font-family:'Meiryo UI';-inkscape-font-specification:'Meiryo UI, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#ffffff;stroke-width:0.264583"
-       x="146.99318"
-       y="167.19604"
+       x="36.574142"
+       y="127.13866"
        id="text10"><tspan
          sodipodi:role="line"
          id="tspan10"
          style="stroke-width:0.264583"
-         x="146.99318"
-         y="167.19604">呪文</tspan></text>
+         x="36.574142"
+         y="127.13866">呪文</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8.46667px;font-family:'Meiryo UI';-inkscape-font-specification:'Meiryo UI, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#ffffff;stroke-width:0.264583"
+       x="36.757496"
+       y="164.45747"
+       id="text10-8"><tspan
+         sodipodi:role="line"
+         id="tspan10-9"
+         style="stroke-width:0.264583"
+         x="36.757496"
+         y="164.45747">防御</tspan></text>
     <rect
-       style="fill:#ff00ff;stroke-width:0.264583"
+       style="fill:#ff00ff;stroke-width:0.254468"
        id="rect12"
        width="148.16667"
-       height="148.16667"
+       height="137.05417"
        x="93.699448"
        y="6.6181765" />
     <rect
@@ -281,5 +278,12 @@
          style="stroke-width:0.264583"
          x="17.764578"
          y="59.215263">相手側</tspan></text>
+    <rect
+       style="fill:#ffffff;stroke-width:0.270986"
+       id="rect8"
+       width="86.732941"
+       height="76.283188"
+       x="246.26584"
+       y="108.67743" />
   </g>
 </svg>

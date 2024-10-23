@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import get_args
 import unittest
 
-from mergic import ECS, GameMap, TextMenu, GameWorld
+from mergic import ECS, TextMenu, GameWorld
 
 
 @dataclass
@@ -23,6 +23,7 @@ class DummyEntity(DummyComponent):
 @dataclass(slots=True)
 class DummyEntity2(DummyComponent, DummyComponent2):
     pass
+
 
 @dataclass(slots=True)
 class DummyEntity3(DummyComponent, DummyComponent2):
@@ -73,15 +74,23 @@ class TestECS(unittest.TestCase):
         self.assertEqual(len(list(world.entities_for_components(DummyComponent2))), 1)
         for entity in world.entities_for_components(DummyComponent2, DummyComponent):
             self.assertEqual(entity.__class__, DummyEntity2)
-        self.assertEqual(len(list(world.entities_for_components(DummyComponent2, DummyComponent))), 1)
+        self.assertEqual(
+            len(list(world.entities_for_components(DummyComponent2, DummyComponent))), 1
+        )
         world.add(DummyEntity2())
         for entity in world.entities_for_components(DummyComponent2, DummyComponent):
             self.assertEqual(entity.__class__, DummyEntity2)
-        self.assertEqual(len(list(world.entities_for_components(DummyComponent2, DummyComponent))), 2)
+        self.assertEqual(
+            len(list(world.entities_for_components(DummyComponent2, DummyComponent))), 2
+        )
         world.add(DummyEntity3())
-        self.assertEqual(len(list(world.entities_for_components(DummyComponent2, DummyComponent))), 3)
+        self.assertEqual(
+            len(list(world.entities_for_components(DummyComponent2, DummyComponent))), 3
+        )
         for entity in world.entities_for_components(DummyComponent):
-            self.assertEqual(entity.__class__ in (DummyEntity, DummyEntity2, DummyEntity3), True)
+            self.assertEqual(
+                entity.__class__ in (DummyEntity, DummyEntity2, DummyEntity3), True
+            )
 
     def test_get_entities_from_components_type_alias(self):
         ExampleTypeAlias = DummyComponent | DummyComponent2
@@ -89,49 +98,12 @@ class TestECS(unittest.TestCase):
         world.add(DummyEntity())
         world.add(DummyEntity2())
         world.add(DummyEntity3())
-        result = [entity.__class__ for entity in world.entities_for_components(*get_args(ExampleTypeAlias))]
-        self.assertCountEqual([DummyEntity3, DummyEntity2], result, msg=f"result={result}")
-
-class TestGameMap(unittest.TestCase):
-    def test_painting_map(self):
-        gamemap = GameMap(3, 3)
-        gamemap.paint("example", 0, 0, 0)
-        gamemap.paint("example", 2, 2, 1)
-        self.assertEqual(gamemap.layer("example")["0,0"], 0)
-        self.assertEqual(gamemap.layer("example")["2,2"], 1)
-
-    def test_painting_map_with_invalid_xy(self):
-        gamemap = GameMap(3, 3)
-        with self.assertRaises(ValueError):
-            gamemap.paint("example", 3, 0, 0)
-
-    def test_gamemap_coords_for_elements(self):
-        gamemap = GameMap(6, 6)
-        gamemap.import_layer("ground", {"0,0": 1, "4,4": 1})
-        for x, y in gamemap.coordinates_of_elements("ground"):
-            pass
-
-    def test_gamemap_example_usage(self):
-        world = GameWorld()
-        world.set_gamemap("departure", GameMap(5, 5))
-        world.gamemap("departure").import_layer("ground", {"0,0": 1, "4,4": 1})
-        list2d: list[list[int]] = []
-        for y in range(0, world.gamemap("departure").height):
-            list2d.append([])
-            for x in range(0, world.gamemap("departure").width):
-                list2d[y].append(
-                    world.gamemap("departure").layer("ground").get(f"{x},{y}", 0)
-                )
-
-        self.assertEqual(
-            list2d,
-            [
-                [1, 0, 0, 0, 0],
-                [0, 0, 0, 0, 0],
-                [0, 0, 0, 0, 0],
-                [0, 0, 0, 0, 0],
-                [0, 0, 0, 0, 1],
-            ],
+        result = [
+            entity.__class__
+            for entity in world.entities_for_components(*get_args(ExampleTypeAlias))
+        ]
+        self.assertCountEqual(
+            [DummyEntity3, DummyEntity2], result, msg=f"result={result}"
         )
 
 
@@ -159,7 +131,7 @@ class TestTextMenu(unittest.TestCase):
         gamemenu.add_option(text="happy", key="save")
         gamemenu.add_option("うおお")
         self.assertEqual(gamemenu.longest_text_length, 5)
-    
+
     def test_game_menu_select_at_index(self):
         gamemenu = TextMenu()
         gamemenu.add_option("abc")
