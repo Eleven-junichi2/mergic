@@ -1,24 +1,21 @@
 from collections import OrderedDict, deque
-from enum import Enum, auto
 from pathlib import Path
 from typing import (
     Any,
     Callable,
     Generator,
-    Iterable,
     Optional,
     Sequence,
-    SupportsInt,
     Tuple,
     Type,
-    TypeAlias,
-    get_args,
 )
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 import os
 
 import pygame
 import pygame.freetype
+
+from mergic.gamemap import TileMap
 
 
 class AssetFinder:
@@ -91,53 +88,10 @@ class ImageAtlas:
         return {atlas_name: self.crop(atlas_name) for atlas_name in self.atlases.keys()}
 
 
-@dataclass
-class GameMap[T]:
-    # TODO: json serialization
-    width: int
-    height: int
-    layers: dict[str, dict[str, T]] = field(default_factory=dict)
-
-    def paint(self, layer: str, x: int, y: int, brush: T):
-        if not isinstance(x, int) or not isinstance(y, int):
-            raise ValueError("Coordinates must be integer values")
-        if x < 0 or y < 0 or x >= self.width or y >= self.height:
-            raise ValueError("Invalid coordinates")
-        self.layers.setdefault(layer, {})
-        self.layers[layer][f"{x},{y}"] = brush
-
-    def erase_at(self, layer: str, x: int, y: int, raise_error_on_missing: bool = True):
-        if not isinstance(x, int) or not isinstance(y, int):
-            raise ValueError("Coordinates must be integer values")
-        if x < 0 or y < 0 or x >= self.width or y >= self.height:
-            raise ValueError("Invalid coordinates")
-        try:
-            del self.layers[layer][f"{x},{y}"]
-        except KeyError:
-            if raise_error_on_missing:
-                raise ValueError(f"no element at ({x},{y})")
-
-    def fetch_by_xy(self, x: int, y: int, layer: str):
-        return self.layers[layer][f"{x},{y}"]
-
-    def coordinates_of_elements(self, layer: str):
-        yield from [
-            [int(_) for _ in coordinate_str.split(",")]
-            for coordinate_str in self.layers[layer].keys()
-        ]
-
-    def layer(self, layer_key: str):
-        return self.layers[layer_key]
-
-    def import_layer[T](self, layer_key: str, layer_data: dict[str, T]):
-        self.layers[layer_key] = layer_data
-
-
 class ECS:
     def __init__(self):
         self.entities: dict[type, list[object]] = {}
         self.dead_entity_buffer: list[object] = []
-        self.maps: dict[str, GameMap] = {}
 
     def add(self, entity: object):
         self.entities.setdefault(entity.__class__, [])
@@ -203,13 +157,13 @@ class ActionController:
 class GameWorld(ECS):
     def __init__(self):
         super().__init__()
-        self.maps: dict[str, GameMap] = {}
+        self.maps: dict[str, TileMap] = {}
 
-    def gamemap(self, map_name) -> GameMap:
+    def map_for_name(self, map_name) -> TileMap:
         return self.maps.get(map_name)
 
-    def set_gamemap(self, map_name, gamemap: GameMap):
-        self.maps[map_name] = gamemap
+    def set_map(self, map_name, tilemap: TileMap):
+        self.maps[map_name] = tilemap
 
 
 @dataclass
