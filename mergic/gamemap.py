@@ -1,6 +1,8 @@
 from collections import UserDict
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, Iterable
+
+from mergic import AssetFinder, ImageAtlas
 
 
 class StrAsCoordMapDict[T](UserDict[str, T]):
@@ -12,7 +14,7 @@ class StrAsCoordMapDict[T](UserDict[str, T]):
             key = ",".join([str(i) for i in key])
         item = super().__getitem__(key)
         return item
-    
+
     def __setitem__(self, key: str | tuple[int, ...], item: T) -> None:
         if isinstance(key, tuple):
             key = ",".join([str(i) for i in key])
@@ -68,3 +70,19 @@ class TileMap:
 
     def import_tiletype_map(self, mapdict: StrAsCoordMapDict | dict):
         self.tiletype_map = StrAsCoordMapDict(mapdict)
+
+
+def build_tileid_to_surf_dict(
+    assetname_for_tile_or_tileset_list: Iterable[str | ImageAtlas],
+    asset_finder: AssetFinder,
+):
+    """Create a dictionary with the structure "'(tileset name:)tile id': surface", using asset names and image atlas region names as tileids."""
+    tileid_to_surface = {}
+    for assetname_or_imageatlas in assetname_for_tile_or_tileset_list:
+        if isinstance(assetname_or_imageatlas, str):
+            tileid_to_surface[assetname_for_tile_or_tileset_list] = (
+                asset_finder.load_img(assetname_or_imageatlas)
+            )
+        elif isinstance(assetname_or_imageatlas, ImageAtlas):
+            tileid_to_surface.update(assetname_or_imageatlas.name_to_surf_dict())
+    return tileid_to_surface
