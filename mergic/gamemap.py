@@ -1,7 +1,7 @@
 from collections import UserDict
 from dataclasses import dataclass, field
 import os
-from typing import Iterable
+from typing import Iterable, Optional
 
 import pygame
 
@@ -21,7 +21,7 @@ class StrAsCoordMapDict[T](UserDict[str, T]):
 
     def __setitem__(self, key: str | tuple[int, ...], item: T) -> None:
         if isinstance(key, tuple):
-            key = ",".join([str(i) for i in key])
+            key = ",".join([str(p) for p in key])
         return super().__setitem__(key, item)
 
     def coords_for_cells(self):
@@ -34,46 +34,58 @@ class StrAsCoordMapDict[T](UserDict[str, T]):
 @dataclass
 class TileMap:
     # TODO: rewrite test
-    width: int
-    height: int
-    tiletype_map: StrAsCoordMapDict = field(default_factory=StrAsCoordMapDict)
-    tileid_layers: dict[str, StrAsCoordMapDict] = field(
-        default_factory=StrAsCoordMapDict
-    )
+    width: Optional[int] = None
+    height: Optional[int] = None
+    signed: bool = False
+    trait_layers: dict[str, StrAsCoordMapDict] = field(default_factory=dict)
+    terrain_layers: dict[str, StrAsCoordMapDict] = field(default_factory=dict)
 
-    def paint_tileid(self, layer_id: str, x: int, y: int, brush):
+    def paint_terrain(self, layer_id: str, x: int, y: int, brush):
         self._raise_if_invalid_coordinate(x, y)
-        self.tileid_layers.setdefault(layer_id, StrAsCoordMapDict())
-        self.tileid_layers[layer_id][f"{x},{y}"] = brush
+        self.terrain_layers.setdefault(layer_id, StrAsCoordMapDict())
+        self.terrain_layers[layer_id][f"{x},{y}"] = brush
 
-    def paint_tiletype(self, x: int, y: int, brush):
+    def paint_trait(self, layer_id: str, x: int, y: int, brush):
         self._raise_if_invalid_coordinate(x, y)
-        self.tileid_layers[f"{x},{y}"] = brush
+        self.trait_layers.setdefault(layer_id, StrAsCoordMapDict())
+        self.trait_layers[layer_id][f"{x},{y}"] = brush
 
-    def erase_tileid(
-        self,
-        layer_id: str,
-        x: int,
-        y: int,
-    ):
+    def erase_terrain(self, layer_id: str, x: int, y: int):
         self._raise_if_invalid_coordinate(x, y)
-        del self.tileid_layers[layer_id][f"{x},{y}"]
+        del self.terrain_layers[layer_id][f"{x},{y}"]
+
+    def erase_trait(self, layer_id: str, x: int, y: int):
+        self._raise_if_invalid_coordinate(x, y)
+        del self.trait_layers[layer_id][f"{x},{y}"]
 
     def _is_coordinate_in_map(self, x: int, y: int):
-        return 0 <= x < self.width and 0 <= y < self.height
+        return (
+            0 <= x < self.width and 0 <= y < self.height
+            if self.signed
+            else -self.width < x < self.width and -self.height < y < self.height
+        )
 
     def _raise_if_invalid_coordinate(self, x: int, y: int):
         if not self._is_coordinate_in_map(x, y):
             raise ValueError(f"Invalid coordinate (out of range): x={x}, y={y}")
 
-    def import_layer(self, layer_id: str, mapdict: StrAsCoordMapDict):
-        self.tileid_layers[layer_id] = mapdict
+    def add_terrain_layer(self, layer_id: str):
+        self.terrain_layers[layer_id] = StrAsCoordMapDict()
 
-    def delete_layer(self, layer_id: str):
-        del self.tileid_layers[layer_id]
+    def add_trait_layer(self, layer_id: str):
+        self.trait_layers[layer_id] = StrAsCoordMapDict()
 
-    def import_tiletype_map(self, mapdict: StrAsCoordMapDict | dict):
-        self.tiletype_map = StrAsCoordMapDict(mapdict)
+    def import_terrain_map(self, layer_id: str, mapdata: StrAsCoordMapDict):
+        self.terrain_layers[layer_id] = mapdata
+
+    def delete_terrain_layer(self, layer_id: str):
+        del self.terrain_layers[layer_id]
+
+    def import_trait_map(self, layer_id, mapdata: StrAsCoordMapDict | dict):
+        self.trait_layers[layer_id] = StrAsCoordMapDict(mapdata)
+
+    def delete_trait_layer(self, layer_id: str):
+        del self.trait_layers[layer_id]
 
 
 def register_imgs_and_existing_regions_files_in_dirs(
