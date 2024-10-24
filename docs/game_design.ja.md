@@ -20,6 +20,7 @@
 各セルを要素とし、複数のレイヤーで見た目を指定するIDを格納するterrain_layers辞書がある。
 
 IDに対するSurfaceを格納するtileid_to_surf辞書を通して描画する。
+マップエディタでtraitレイヤーを描画するためには、tiletrait_to_surf辞書を使う。
 
 tileidは、tileset名:タイル名の記法。tilesetを持たない場合は、そのままタイル名がtileidになる。
 
