@@ -1,3 +1,5 @@
+import json
+import os
 from typing import Callable, Iterable
 import functools
 import time
@@ -22,5 +24,8 @@ def measure_time_performance(func: Callable):
             f"Func {func.__name__} took {(end_time - start_time)/(10**9):.9f} seconds, result={result}"
         )
         return result
-
     return wrapper
+
+def load_json(filepath: str | os.PathLike):
+    with open(filepath, "r", encoding="utf-8") as f:
+        return json.load(f)

@@ -5,7 +5,11 @@ from pathlib import Path
 
 import pygame
 from mergic.asset import AssetFinder, ImageAtlas
-from mergic.gamemap import TileMap
+from mergic.gamemap import (
+    TileMap,
+    register_imgs_and_existing_regions_files_in_dirs,
+    build_tileid_to_surf_from_img_dirs,
+)
 
 import tkinter as tk
 
@@ -28,7 +32,7 @@ class Config:
                 / "mergic"
                 / "assets"
                 / "imgs"
-                / "tilesets"
+                / "tiles"
             )
         ]
     )
@@ -42,31 +46,13 @@ else:
     with open(CONFIG_FILEPATH, "r", encoding="utf-8") as f:
         config = Config(**json.load(f))
 
-
-def load_json(filepath: str | os.PathLike):
-    with open(filepath, "r", encoding="utf-8") as f:
-        return json.load(f)
-
-
 asset_finder = AssetFinder()
-for tile_img_dirpath in config.tile_img_dirpaths:
-    img_asset_names = asset_finder.register_all_in_dir(
-        "img", tile_img_dirpath, inclusive_exts=(".png",)
-    )
-    atlas_regions_asset_names = asset_finder.register_all_in_dir(
-        "atlas_regions", tile_img_dirpath, inclusive_exts=(".json",)
-    )
-tileid_to_surf = {}
-for img_asset_name in img_asset_names:
-    if img_asset_name in atlas_regions_asset_names:
-        atlas = ImageAtlas(
-            asset_finder.load_img(img_asset_name),
-            asset_finder.load(img_asset_name, "atlas_regions", load_json),
-            atlas_name=img_asset_name,
-        )
-        tileid_to_surf.update(atlas.name_to_surf_dict())
-    else:
-        tileid_to_surf[img_asset_name] = asset_finder.load_img(img_asset_name)
+tileids = register_imgs_and_existing_regions_files_in_dirs(
+    config.tile_img_dirpaths, asset_finder
+)[0]
+tileid_to_surf = build_tileid_to_surf_from_img_dirs(
+    asset_finder, tile_img_assets_as_tileids=tileids
+)
 
 
 class App:
@@ -76,7 +62,6 @@ class App:
         self.root.geometry("640x540")
         self.brush_listvar = tk.StringVar()
         self.brush_listvar.set(list(tileid_to_surf.keys()))
-
 
     def setup(self):
         pallate_frame = tk.Frame(self.root, bd=1, relief=tk.RAISED)

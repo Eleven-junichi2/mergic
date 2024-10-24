@@ -1,10 +1,12 @@
 from collections import UserDict
 from dataclasses import dataclass, field
 import os
-from pathlib import Path
 from typing import Iterable
 
+import pygame
+
 from mergic.asset import AssetFinder, ImageAtlas
+from mergic.utils import load_json
 
 
 class StrAsCoordMapDict[T](UserDict[str, T]):
@@ -74,17 +76,45 @@ class TileMap:
         self.tiletype_map = StrAsCoordMapDict(mapdict)
 
 
-def build_tileid_to_surf_dict(
-    assetname_for_tile_or_tileset_list: Iterable[str | ImageAtlas],
+def register_imgs_and_existing_regions_files_in_dirs(
+    img_dirpaths: Iterable[str | os.PathLike],
     asset_finder: AssetFinder,
+    img_category_name: str = "img",
+    atlas_regions_category_name: str = "atlas_regions",
 ):
-    """Create a dictionary with the structure "'(tileset name:)tile id': surface", using asset names and image atlas region names as tileids."""
-    tileid_to_surface = {}
-    for assetname_or_imageatlas in assetname_for_tile_or_tileset_list:
-        if isinstance(assetname_or_imageatlas, str):
-            tileid_to_surface[assetname_or_imageatlas] = (
-                asset_finder.load_img(assetname_or_imageatlas)
+    """
+    指定されたディレクトリの画像を、`img_category_name`で指定されたカテゴリでAssetFinderに登録します。
+    また、画像と同名のjsonファイルがあれば画像アトラスの領域指定を定義したものとして、
+    `atlas_regions_category_name`で指定されたカテゴリ名でAssetFinderに登録します。
+    返り値はそれぞれのアセット登録名のリスト2つです。
+    """
+    for tile_img_dirpath in img_dirpaths:
+        img_asset_names = asset_finder.register_all_in_dir(
+            img_category_name, tile_img_dirpath, inclusive_exts=(".png",)
+        )
+        atlas_regions_asset_names = asset_finder.register_all_in_dir(
+            atlas_regions_category_name, tile_img_dirpath, inclusive_exts=(".json",)
+        )
+    return img_asset_names, atlas_regions_asset_names
+
+
+def build_tileid_to_surf_from_img_dirs(
+    asset_finder: AssetFinder,
+    tile_img_assets_as_tileids: Iterable[str],
+    img_category_name: str = "img",
+    atlas_regions_category_name: str = "atlas_regions",
+):
+    tileid_to_surf = {}
+    for img_asset_name in tile_img_assets_as_tileids:
+        if img_asset_name in asset_finder.dict[atlas_regions_category_name].keys():
+            atlas = ImageAtlas(
+                asset_finder.load(img_asset_name, img_category_name, pygame.image.load),
+                asset_finder.load(
+                    img_asset_name, atlas_regions_category_name, load_json
+                ),
+                atlas_name=img_asset_name,
             )
-        elif isinstance(assetname_or_imageatlas, ImageAtlas):
-            tileid_to_surface.update(assetname_or_imageatlas.name_to_surf_dict())
-    return tileid_to_surface
+            tileid_to_surf.update(atlas.name_to_surf_dict())
+        else:
+            tileid_to_surf[img_asset_name] = asset_finder.load_img(img_asset_name)
+    return tileid_to_surf
