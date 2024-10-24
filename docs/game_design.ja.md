@@ -17,17 +17,17 @@
 32x32 のタイルマップ。
 各マスに含めるデータをセルと呼称する。
 各セルを要素とし性質（通行可能など）を格納するtiletypeマップ辞書
-各セルを要素とし見た目を指定するIDを格納するvisualマップ辞書がある。
-visualマップ辞書には複数のレイヤーを用意する。
+各セルを要素とし、複数のレイヤーで見た目を指定するIDを格納するtileid_layers辞書がある。
 
 IDに対するSurfaceを格納するtileid_to_surf辞書を通して描画する。
+
+tileidは、tileset名:タイル名の記法。tilesetを持たない場合は、そのままタイル名がtileidになる。
 
 #### tileid_to_surfの設定方法
 
 オートタイル用に、autotile_bitmask辞書を用意する。内容は{tileid: {bitmask}}
 bitmaskは9桁の二進数を3x3として扱い判定する。
 
-tiletype_to_surf タイルの種類に対するpygame.Surfaceの辞書。str: pygame.Surface
 assetname_to_filepath ファイルパスに対するエイリアス名辞書。 AssetFinderがこの役目を担う
 
 ## シナリオ

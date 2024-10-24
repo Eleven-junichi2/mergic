@@ -23,6 +23,7 @@ CONFIG_FILEPATH = Path(__file__).parent / "config.json"
 # --initialization
 @dataclass
 class Config:
+    # Define default configuration
     tile_width: int = 16
     tile_height: int = 16
     tileset_dirpath: str | os.PathLike = str(

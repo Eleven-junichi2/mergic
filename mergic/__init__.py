@@ -4,6 +4,7 @@ from typing import (
     Any,
     Callable,
     Generator,
+    Iterable,
     Optional,
     Sequence,
     Tuple,
@@ -66,26 +67,47 @@ class ImageAtlas:
     def __init__(
         self,
         image: pygame.Surface,
-        atlases: dict[str, Tuple[Tuple[int, int], Tuple[int, int]]],
+        regions: dict[str, Tuple[Tuple[int, int], Tuple[int, int]]],
+        atlas_name: Optional[str] = None,
     ):
+        self.atlas_name = atlas_name
         self.image = image
-        self.atlases = atlases
+        self.regions = regions
 
-    @staticmethod
-    def tile_atlases(
-        self, tile_height, tile_width, row_count, column_count, how_many_tiles
-    ):
-        raise NotImplementedError
-
-    def crop(self, atlas_name: str) -> pygame.Surface:
-        if atlas_name not in self.atlases:
-            raise ValueError("Invalid atlas name")
+    def crop(self, region_name: str) -> pygame.Surface:
+        if region_name not in self.regions:
+            raise ValueError("Invalid region name")
         return self.image.subsurface(
-            self.atlases[atlas_name][0], self.atlases[atlas_name][1]
+            self.regions[region_name][0], self.regions[region_name][1]
         )
 
-    def name_to_surf_dict(self) -> dict[str, pygame.Surface]:
-        return {atlas_name: self.crop(atlas_name) for atlas_name in self.atlases.keys()}
+    def name_to_surf_dict(self, spliter_symbol: str = ":") -> dict[str, pygame.Surface]:
+        """Create a dictionary with the structure 'region name: surface'.
+        If `atlas_name` attribute is provided, the keys will be formatted as '{atlas_name}{spliter_symbol}{region_name}'.
+        """
+        if self.atlas_name:
+            prefix = f"{self.atlas_name}{spliter_symbol}"
+        else:
+            prefix = ""
+        return {
+            f"{prefix}{atlas_name}": self.crop(atlas_name)
+            for atlas_name in self.regions.keys()
+        }
+
+
+def build_tileid_to_surf_dict(
+    assetname_for_tile_or_tileset_list: Iterable[str | ImageAtlas],
+    asset_finder: AssetFinder,
+):
+    """Create a dictionary with the structure "'(tileset name:)tile id': surface", using asset names and image atlas region names as tileids."""
+    tileid_to_surface = {}
+    for assetname_or_imageatlas in assetname_for_tile_or_tileset_list:
+        if isinstance(assetname_or_imageatlas, str):
+            tileid_to_surface[assetname_for_tile_or_tileset_list] = (
+                asset_finder.load_img(assetname_or_imageatlas)
+            )
+        elif isinstance(assetname_or_imageatlas, ImageAtlas):
+            tileid_to_surface.update(assetname_or_imageatlas.name_to_surf_dict())
 
 
 class ECS:
