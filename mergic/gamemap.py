@@ -66,5 +66,5 @@ class TileMap:
     def delete_layer(self, layer_id: str):
         del self.tileid_layers[layer_id]
 
-    def import_tiletype_map(self, mapdict: StrAsCoordMapDict):
-        self.tiletype_map = mapdict
+    def import_tiletype_map(self, mapdict: StrAsCoordMapDict | dict):
+        self.tiletype_map = StrAsCoordMapDict(mapdict)

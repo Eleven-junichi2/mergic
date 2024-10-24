@@ -33,8 +33,24 @@ class TestGameMap(unittest.TestCase):
         tilemap = TileMap(16, 16)
         tilemap.paint_tileid("ground", 1, 1, brush="dirt")
         tilemap.erase_tileid("ground", 1, 1)
-        self.assertEqual(tilemap.tileid_layers["ground"].get((1,1)), None)
+        self.assertEqual(tilemap.tileid_layers["ground"].get((1, 1)), None)
         self.assertEqual(tilemap.tileid_layers["ground"].get("1,1"), None)
+
+    def test_import_layer(self):
+        tilemap = TileMap(16, 16)
+        tilemap.import_layer("ground", {"0,0": "dirt", "1,1": "grass"})
+        self.assertEqual(tilemap.tileid_layers["ground"]["0,0"], "dirt")
+        self.assertEqual(tilemap.tileid_layers["ground"]["1,1"], "grass")
+        tilemap.import_layer("water", {"2,2": "water"})
+        self.assertEqual(tilemap.tileid_layers["water"]["2,2"], "water")
+    
+    def test_delete_layer(self):
+        tilemap = TileMap(16, 16)
+        tilemap.import_layer("ground", {"0,0": "dirt", "1,1": "grass"})
+        tilemap.delete_layer("ground")
+        self.assertNotIn("ground", tilemap.tileid_layers)
+        with self.assertRaises(KeyError):
+            tilemap.tileid_layers["ground"]["0,0"]
 
 
 if __name__ == "__main__":
