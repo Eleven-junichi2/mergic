@@ -21,13 +21,11 @@ from mergic.components import (
 from mergic import (
     ActionController,
     GameWorld,
-    AssetFinder,
-    GameMap,
-    ImageAtlas,
     SceneManager,
     Scene,
     TextMenu,
 )
+from mergic.asset import AssetFinder
 from mergic.gui import (
     MenuUICursor,
     MenuUICursorStyle,

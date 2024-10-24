@@ -82,7 +82,7 @@ def build_tileid_to_surf_dict(
     tileid_to_surface = {}
     for assetname_or_imageatlas in assetname_for_tile_or_tileset_list:
         if isinstance(assetname_or_imageatlas, str):
-            tileid_to_surface[assetname_for_tile_or_tileset_list] = (
+            tileid_to_surface[assetname_or_imageatlas] = (
                 asset_finder.load_img(assetname_or_imageatlas)
             )
         elif isinstance(assetname_or_imageatlas, ImageAtlas):
