@@ -9,6 +9,7 @@ from typing import (
     Sequence,
     Tuple,
     Type,
+    TypeVar,
 )
 from dataclasses import dataclass
 import os
@@ -18,81 +19,6 @@ import pygame.freetype
 
 from mergic.gamemap import TileMap
 
-
-class AssetFinder:
-    def __init__(self):
-        self.dict: dict[str, str | os.PathLike] = {}
-
-    def register(self, name: str, filepath: str | os.PathLike):
-        self.dict[name] = filepath
-
-    def register_all_in_dir(
-        self,
-        dirpath: str | os.PathLike,
-        naming_with_suffix: bool = False,
-        inclusive_exts: Optional[Tuple[str]] = None,
-        exclusive_exts: Optional[Tuple[str]] = None,
-    ):
-        registered_names = deque()
-        for filepath in Path(dirpath).iterdir():
-            if filepath.is_file():
-                if inclusive_exts:
-                    if filepath.suffix not in inclusive_exts:
-                        continue
-                if exclusive_exts:
-                    if filepath.suffix in exclusive_exts:
-                        continue
-                if naming_with_suffix:
-                    name = filepath.name
-                else:
-                    name = filepath.stem
-                self.register(name, filepath)
-                registered_names.append(name)
-        return registered_names
-
-    def load_img(self, name) -> pygame.Surface:
-        return pygame.image.load(self.dict[name])
-
-    def load_sound(self, name) -> pygame.mixer.Sound:
-        return pygame.mixer.Sound(str(self.dict[name]))
-
-    def load_font(self, name) -> pygame.freetype.Font:
-        return pygame.freetype.Font(self.dict[name])
-
-    def filepath(self, name) -> str | os.PathLike:
-        return self.dict[name]
-
-
-class ImageAtlas:
-    def __init__(
-        self,
-        image: pygame.Surface,
-        regions: dict[str, Tuple[Tuple[int, int], Tuple[int, int]]],
-        atlas_name: Optional[str] = None,
-    ):
-        self.atlas_name = atlas_name
-        self.image = image
-        self.regions = regions
-
-    def crop(self, region_name: str) -> pygame.Surface:
-        if region_name not in self.regions:
-            raise ValueError("Invalid region name")
-        return self.image.subsurface(
-            self.regions[region_name][0], self.regions[region_name][1]
-        )
-
-    def name_to_surf_dict(self, spliter_symbol: str = ":") -> dict[str, pygame.Surface]:
-        """Create a dictionary with the structure 'region name: surface'.
-        If `atlas_name` attribute is provided, the keys will be formatted as '{atlas_name}{spliter_symbol}{region_name}'.
-        """
-        if self.atlas_name:
-            prefix = f"{self.atlas_name}{spliter_symbol}"
-        else:
-            prefix = ""
-        return {
-            f"{prefix}{atlas_name}": self.crop(atlas_name)
-            for atlas_name in self.regions.keys()
-        }
 
 class ECS:
     def __init__(self):

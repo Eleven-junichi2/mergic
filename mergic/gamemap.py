@@ -1,8 +1,10 @@
 from collections import UserDict
 from dataclasses import dataclass, field
-from typing import Any, Iterable
+import os
+from pathlib import Path
+from typing import Iterable
 
-from mergic import AssetFinder, ImageAtlas
+from mergic.asset import AssetFinder, ImageAtlas
 
 
 class StrAsCoordMapDict[T](UserDict[str, T]):

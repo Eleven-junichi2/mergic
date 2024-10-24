@@ -157,7 +157,7 @@ class TitleScene(Scene):
             self.title_surface.get_size(), self.screen.get_size()
         )
         self.flag_gamescene = False
-        self.font = asset_finder.load_font("font")
+        self.font = asset_finder.load("font", "font")
         self.font.size = 12
         self.font.fgcolor = pygame.color.Color(255, 255, 255)
         menu = TextMenu()
@@ -209,7 +209,8 @@ class BattleEmulationScene(Scene):
         self.menufont.fgcolor = pygame.color.Color(200, 200, 222)
         menu = TextMenu()
         menu.add_option(
-            "テキスト入力をテスト", callback=lambda: (self.menuui.unfocus(),self.textinputui.focus())
+            "テキスト入力をテスト",
+            callback=lambda: (self.menuui.unfocus(), self.textinputui.focus()),
         )
         menu.add_option(
             "足掻く",
