@@ -59,11 +59,13 @@ class TileMap:
         del self.trait_layers[layer_id][f"{x},{y}"]
 
     def _is_coordinate_in_map(self, x: int, y: int):
-        return (
-            0 <= x < self.width and 0 <= y < self.height
-            if self.signed
-            else -self.width < x < self.width and -self.height < y < self.height
-        )
+        if self.width or self.height:
+            return (
+                0 <= x < self.width and 0 <= y < self.height
+                if self.signed
+                else -self.width < x < self.width and -self.height < y < self.height
+            )
+        return True
 
     def _raise_if_invalid_coordinate(self, x: int, y: int):
         if not self._is_coordinate_in_map(x, y):
