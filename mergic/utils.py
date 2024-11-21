@@ -4,6 +4,9 @@ from typing import Callable, Iterable
 import functools
 import time
 
+import pygame
+import pygame.freetype
+
 
 def calc_center_pos(
     target_size: Iterable[int], canvas_size: Iterable[int]
@@ -24,8 +27,22 @@ def measure_time_performance(func: Callable):
             f"Func {func.__name__} took {(end_time - start_time)/(10**9):.9f} seconds, result={result}"
         )
         return result
+
     return wrapper
+
 
 def load_json(filepath: str | os.PathLike):
     with open(filepath, "r", encoding="utf-8") as f:
         return json.load(f)
+
+
+def load_img(filepath: str | os.PathLike) -> pygame.Surface:
+    return pygame.image.load(filepath)
+
+
+def load_sound(filepath: str | os.PathLike) -> pygame.mixer.Sound:
+    return pygame.mixer.Sound(filepath)
+
+
+def load_font(filepath: str | os.PathLike) -> pygame.freetype.Font:
+    return pygame.freetype.Font(filepath)

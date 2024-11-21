@@ -40,15 +40,6 @@ class AssetFinder:
                 registered_names.append(name)
         return registered_names
 
-    def load_img(self, name: str) -> pygame.Surface:
-        return pygame.image.load(self.dict["img"][name])
-
-    def load_sound(self, name: str) -> pygame.mixer.Sound:
-        return pygame.mixer.Sound(str(self.dict["sound"][name]))
-
-    def load_font(self, name: str) -> pygame.freetype.Font:
-        return pygame.freetype.Font(str(self.dict["font"][name]))
-
     def load[T](
         self, name: str, category: str, loader: Callable[[str | os.PathLike], T]
     ) -> T:
