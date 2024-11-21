@@ -1,13 +1,13 @@
-# Wizahlen
+# Mergic
 
-rpg game
+game engine
 
-## How to run
+## How to run example
 
 ```ps1
-python -m mergic
-# or
-py -m mergic
+python -m mergic.example.[executable dir or script file name]
+# py launcher(Windows)
+py -m mergic.example.[executable dir or script file name]
 ```
 
 ### Map Editor
@@ -16,5 +16,4 @@ py -m mergic
 # (from project's root directory)
 python .\tools\gamemap_editor\launcher.py
 # or
-python .\tools\gamemap_editor\gamemap_editor_prototype.py
 ```
