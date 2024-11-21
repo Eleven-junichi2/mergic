@@ -33,7 +33,18 @@ class StrAsCoordMapDict[T](UserDict[str, T]):
 
 @dataclass
 class TileMap:
-    # TODO: rewrite test
+    """
+    2Dタイルマップを表現するデータ。
+
+    Attributes:
+        width: マップの横幅サイズを指定
+        height: マップの縦幅サイズを指定
+        signed_coordinate:
+            マップの座標・領域設定に負の方向を含めるかどうかを真偽値で設定する。
+            （例えば、Trueの場合 widthが12のとき、x=-11, x=11どちらも含んだサイズになる。）
+        trait_layers: 各マスの性質を表現するデータ(通行可能マスを表す真偽値等)を複数レイヤーで 名前: そのレイヤーのマップデータ の形式で格納する。
+        terrain_layers: 各マスの見た目を表現するデータ(タイル画像のid等)を複数レイヤーで 名前: そのレイヤーのマップデータ の形式で格納する。
+    """
     width: Optional[int] = None
     height: Optional[int] = None
     signed_coordinate: bool = False
