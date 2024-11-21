@@ -36,7 +36,7 @@ class TileMap:
     # TODO: rewrite test
     width: Optional[int] = None
     height: Optional[int] = None
-    signed: bool = False
+    signed_coordinate: bool = False
     trait_layers: dict[str, StrAsCoordMapDict] = field(default_factory=dict)
     terrain_layers: dict[str, StrAsCoordMapDict] = field(default_factory=dict)
 
@@ -62,7 +62,7 @@ class TileMap:
         if self.width or self.height:
             return (
                 0 <= x < self.width and 0 <= y < self.height
-                if self.signed
+                if self.signed_coordinate
                 else -self.width < x < self.width and -self.height < y < self.height
             )
         return True
