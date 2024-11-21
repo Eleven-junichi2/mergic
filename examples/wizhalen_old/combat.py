@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 from enum import Enum, StrEnum, auto
 from typing import Callable, Iterable, Optional, TypeAlias
 from mergic import TextMenu
-from mergic.components import (
+from examples.wizhalen_old.components import (
     HasFriendlyFactions,
     HasHP,
     HasHostileFactions,
@@ -18,7 +18,7 @@ from mergic.components import (
     HasResistance,
     MobTypeStr,
 )
-from mergic.wizard import SpellRecord
+from examples.wizhalen_old.wizard import SpellRecord
 
 CombatUnit: TypeAlias = (
     HasName

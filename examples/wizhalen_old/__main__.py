@@ -11,7 +11,7 @@ import pygame
 from pygame.event import Event
 from pygame.math import Vector2
 
-from mergic.components import (
+from examples.wizhalen_old.components import (
     HasActions,
     HasCoordinate,
     HasSurface,
@@ -35,7 +35,7 @@ from mergic.gui import (
     TextInputUI,
 )
 from mergic.utils import calc_center_pos
-from mergic.entities import Player
+from examples.wizhalen_old.entities import Player
 
 # os.environ["SDL_IME_SHOW_UI"] = "1"
 # os.environ["SDL_HINT_IME_SHOW_UI"] = "1"
@@ -46,9 +46,10 @@ FPS = 60
 ASSETS_DIR = Path(__file__).parent / "assets"
 
 asset_finder = AssetFinder()
-asset_finder.register("title", ASSETS_DIR / "imgs" / "title.png")
-asset_finder.register("font", ASSETS_DIR / "fonts" / "k8x12L.ttf")
+asset_finder.register("title", ASSETS_DIR / "imgs" / "title.png", category="img")
+asset_finder.register("font", ASSETS_DIR / "fonts" / "k8x12L.ttf", category="font")
 music_asset_names = asset_finder.register_all_in_dir(
+    "sound",
     ASSETS_DIR / "sounds" / "musics", inclusive_exts=[".wav", ".ogg"]
 )
 
@@ -110,7 +111,7 @@ class SoundTestScene(Scene):
             ):
                 pygame.mixer_music.stop()
             else:
-                pygame.mixer_music.load(asset_finder.filepath(current_selection[0]))
+                pygame.mixer_music.load(asset_finder.filepath(current_selection[0], "sound"))
                 pygame.mixer_music.play()
                 self.current_music = current_selection[0]
 
@@ -155,7 +156,7 @@ class TitleScene(Scene):
             self.title_surface.get_size(), self.screen.get_size()
         )
         self.flag_gamescene = False
-        self.font = asset_finder.load("font", "font")
+        self.font = asset_finder.load_font("font")
         self.font.size = 12
         self.font.fgcolor = pygame.color.Color(255, 255, 255)
         menu = TextMenu()

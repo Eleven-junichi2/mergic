@@ -3,12 +3,12 @@ import typing
 from pygame import Vector2
 import pygame
 from mergic import ActionController, GameWorld
-from mergic import wizard
-from mergic.components import HP
-from mergic.entities import Mob, Player
-from mergic.wizard import AlchemicalElement, Magic, SpellRecord
-from mergic.status import Mana, OwnedStatusEffects
-from mergic import combat, combat_cli
+from examples.wizhalen_old import combat_cli, wizard
+from examples.wizhalen_old.components import HP
+from examples.wizhalen_old.entities import Mob, Player
+from examples.wizhalen_old.wizard import AlchemicalElement, Magic, SpellRecord
+from examples.wizhalen_old.status import Mana, OwnedStatusEffects
+from examples.wizhalen_old import combat
 
 
 def main():

@@ -8,9 +8,9 @@ import pygame
 from mergic import ActionController, GameWorld
 
 # from mergic import wizard
-from mergic.combat import CombatLoop, CombatLoopConfig, TurnAction, CombatUnit
-from mergic.entities import Mob, Player
-from mergic.status import HP, Mana, OwnedStatusEffects
+from examples.wizhalen_old.combat import CombatLoop, CombatLoopConfig, TurnAction, CombatUnit
+from examples.wizhalen_old.entities import Mob, Player
+from examples.wizhalen_old.status import HP, Mana, OwnedStatusEffects
 # from mergic.wizard import AlchemicalElement, Magic, SpellRecord
 
 

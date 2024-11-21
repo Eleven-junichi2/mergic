@@ -1,8 +1,8 @@
 from collections import deque
 from typing import Callable, Iterable, Sequence, Tuple
 from mergic import TextMenu
-from mergic import wizard
-from mergic.status import (
+from examples.wizhalen_old import wizard
+from examples.wizhalen_old.status import (
     StatusEffect,
     StatusEffectContent,
     BuffVariants,
@@ -10,8 +10,8 @@ from mergic.status import (
 )
 from mergic.ui import PromptResult
 from mergic.cli import ask_yes_no, inquire_typed_value
-from mergic.wizard import AlchemicalElement, SpellRecord, SpellTrait
-from mergic.combat import (
+from examples.wizhalen_old.wizard import AlchemicalElement, SpellRecord, SpellTrait
+from examples.wizhalen_old.combat import (
     CombatUnit,
     TurnAction,
     TurnActionType,

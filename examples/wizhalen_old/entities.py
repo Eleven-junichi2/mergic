@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from mergic.components import (
+from examples.wizhalen_old.components import (
     HasActions,
     HasCoordinate,
     HasHP,

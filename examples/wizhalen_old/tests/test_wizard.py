@@ -1,8 +1,8 @@
 import unittest
 
-from mergic import wizard
-from mergic.wizard import SpellTrait
-from mergic.status import StatusEffect, StatusEffectContent, OwnedStatusEffects
+from examples.wizhalen_old import wizard
+from examples.wizhalen_old.wizard import SpellTrait
+from examples.wizhalen_old.status import StatusEffect, StatusEffectContent, OwnedStatusEffects
 
 
 class TestWizard(unittest.TestCase):

@@ -1,4 +1,4 @@
-from mergic.wizard import auto_name, spell_factory
+from examples.wizhalen_old.wizard import auto_name, spell_factory
 
 
 def playground_cli():

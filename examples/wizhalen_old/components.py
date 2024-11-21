@@ -3,8 +3,8 @@ from typing import Optional
 
 import pygame
 
-from mergic.wizard import AlchemicalElement, SpellRecord
-from mergic.status import OwnedStatusEffects, Mana, HP
+from examples.wizhalen_old.wizard import AlchemicalElement, SpellRecord
+from examples.wizhalen_old.status import OwnedStatusEffects, Mana, HP
 import mergic
 
 MobTypeStr = str
