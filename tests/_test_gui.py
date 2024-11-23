@@ -1,6 +1,6 @@
 import unittest
 
-from mergic.gui import UI
+from mergic.ui import UI
 
 
 class TestUI(unittest.TestCase):

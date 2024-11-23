@@ -26,7 +26,7 @@ from mergic import (
     TextMenu,
 )
 from mergic.asset import AssetFinder
-from mergic.gui import (
+from mergic.ui import (
     MenuUICursor,
     MenuUICursorStyle,
     MenuUIHighlightStyle,

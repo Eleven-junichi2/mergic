@@ -1,11 +1,41 @@
-import json
-import os
+from dataclasses import dataclass, field
 from typing import Callable, Iterable
 import functools
+import json
+import os
 import time
 
 import pygame
 import pygame.freetype
+
+
+@dataclass(init=False)
+class PromptResult[T]:
+    """This class represents the result of a User Selection.
+    The reason for wrapping the result in this class is to
+    prevent values such as 0 and "" from being considered False."""
+
+    value: T = field(init=False)
+    _is_ok: bool = field(init=False)
+
+    @classmethod
+    def Ok(cls, value: T):
+        wrapper = PromptResult[T]()
+        wrapper.value = value
+        wrapper._is_ok = True
+        return wrapper
+
+    @classmethod
+    def Cancel(cls):
+        wrapper = PromptResult[T]()
+        wrapper._is_ok = False
+        return wrapper
+
+    def __bool__(self):
+        return self._is_ok
+
+    def unwrap(self) -> T:
+        return self.value
 
 
 def calc_center_pos(
