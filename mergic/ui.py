@@ -2,6 +2,7 @@ from enum import Enum, auto
 import os
 from typing import (
     Optional,
+    Sequence,
 )
 from dataclasses import dataclass
 
@@ -12,8 +13,8 @@ from mergic import TextMenu
 
 
 class UI:
-    def __init__(self, pos: Optional[pygame.math.Vector2] = None) -> None:
-        self.pos: Optional[pygame.math.Vector2] = pos
+    def __init__(self, pos: Optional[pygame.math.Vector2 | Sequence[float | int]] = None) -> None:
+        self.pos: Optional[pygame.math.Vector2] = pygame.math.Vector2(pos)
         self.is_focused: bool = False
 
     def focus(self):

@@ -1,7 +1,7 @@
 from collections import deque
 import os
 from pathlib import Path
-from typing import Callable, Optional, Tuple
+from typing import Callable, Optional, Tuple, TypeVar
 import pygame
 import pygame.freetype
 
