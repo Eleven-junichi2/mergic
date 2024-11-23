@@ -11,6 +11,27 @@ import pygame.freetype
 from mergic import TextMenu
 
 
+class UI:
+    def __init__(self, pos: Optional[pygame.math.Vector2] = None) -> None:
+        self.pos: Optional[pygame.math.Vector2] = pos
+        self.is_focused: bool = False
+
+    def focus(self):
+        self.is_focused = True
+
+    def unfocus(self):
+        self.is_focused = False
+
+    def handle_event(self, event: pygame.event.Event):
+        raise NotImplementedError
+
+    def update(self, dt):
+        raise NotImplementedError
+
+    def render(self) -> pygame.surface.Surface:
+        raise NotImplementedError
+
+
 @dataclass
 class MenuUIHighlightStyle:
     fgcolor: Optional[pygame.color.Color] = None
@@ -25,7 +46,11 @@ class MenuUICursorStyle(Enum):
 
 
 class MenuUICursor:
-    def __init__(self, surface: Optional[pygame.surface.Surface] = None, render_position: MenuUICursorStyle = MenuUICursorStyle.ATTACH_RIGHT):
+    def __init__(
+        self,
+        surface: Optional[pygame.surface.Surface] = None,
+        render_position: MenuUICursorStyle = MenuUICursorStyle.ATTACH_RIGHT,
+    ):
         self.surface = surface
         self.render_position = render_position
 
@@ -52,7 +77,7 @@ class MenuUIPageIndicatorStyle(Enum):
     ATTACH_TOP = auto()
 
 
-class MenuUI:
+class MenuUI(UI):
     def __init__(
         self,
         menu: TextMenu,
@@ -62,7 +87,9 @@ class MenuUI:
         max_display_options: Optional[int] = None,
         view_mode: Optional[MenuUIViewMode] = MenuUIViewMode.PAGING,
         page_indicator_style: Optional[MenuUIPageIndicatorStyle] = None,
+        **kwargs,
     ):
+        super().__init__(**kwargs)
         self.menu = menu
         self.font = font
         self.cursor = cursor
@@ -83,14 +110,7 @@ class MenuUI:
         }
         self.max_display_options = max_display_options
         self.view_mode = view_mode
-        self.is_focused = False
         self.page_indicator_style = page_indicator_style
-
-    def focus(self):
-        self.is_focused = True
-
-    def unfocus(self):
-        self.is_focused = False
 
     def handle_event(self, event: pygame.event.Event):
         if not self.is_focused:
@@ -185,16 +205,13 @@ class MenuUI:
             )
         return entire_surface
 
-    def update(self, dt):
-        raise NotImplementedError
-
 
 class SDL_IME_SHOW_UI_isInactiveError(Exception):
     def __init__(self, *args: object) -> None:
         super().__init__(*args)
 
 
-class TextInputUI:
+class TextInputUI(UI):
     def __init__(
         self,
         font: pygame.freetype.Font,
@@ -206,7 +223,9 @@ class TextInputUI:
         fixed_height: Optional[int] = None,
         bgcolor: Optional[pygame.color.Color] = None,
         bgcolor_on_focus: Optional[pygame.color.Color] = None,
+        **kwargs,
     ):
+        super().__init__(**kwargs)
         self.font = font
         self.text = default_text
         self.max_line_count = max_line_count
@@ -214,14 +233,18 @@ class TextInputUI:
         self.max_line_length = max_line_length
         self.fixed_width = fixed_width
         self.fixed_height = fixed_height
-        self.bgcolor: pygame.color.Color = bgcolor if bgcolor else pygame.color.Color(222, 222, 222)
-        self.bgcolor_on_focus: pygame.color.Color = bgcolor_on_focus if bgcolor_on_focus else pygame.color.Color(255, 255, 255)
+        self.bgcolor: pygame.color.Color = (
+            bgcolor if bgcolor else pygame.color.Color(222, 222, 222)
+        )
+        self.bgcolor_on_focus: pygame.color.Color = (
+            bgcolor_on_focus if bgcolor_on_focus else pygame.color.Color(255, 255, 255)
+        )
         self.is_focused = False
         self.editing_text = ""
 
     def focus(self):
+        super().focus()
         pygame.key.start_text_input()
-        self.is_focused = True
 
     def display_IME_candidate_list(self, where_to_render: Optional[pygame.rect.Rect]):
         if os.environ.get("SDL_IME_SHOW_UI", "0") == "0":
@@ -231,8 +254,8 @@ class TextInputUI:
         pygame.key.set_text_input_rect(where_to_render)
 
     def unfocus(self):
+        super().unfocus()
         pygame.key.stop_text_input()
-        self.is_focused = False
 
     def render(self) -> pygame.surface.Surface:
         bgcolor = self.bgcolor_on_focus if self.is_focused else self.bgcolor
@@ -303,11 +326,13 @@ class TextInputUI:
                 self.text = self.text[:-1]
                 # print(f"afteredit: self.text='{self.text}'")
 
+
 class FrameSide(Enum):
     TOP = auto()
     BOTTOM = auto()
     LEFT = auto()
     RIGHT = auto()
+
 
 class FrameCorner(Enum):
     TOP_LEFT = auto()
@@ -315,9 +340,11 @@ class FrameCorner(Enum):
     BOTTOM_LEFT = auto()
     BOTTOM_RIGHT = auto()
 
+
 class FrameBGStyle(Enum):
     TILING = auto()
     STRETCH = auto()
+
 
 @dataclass
 class FrameStyle:
@@ -325,17 +352,19 @@ class FrameStyle:
     bg: pygame.surface.Surface
     bg_style: FrameBGStyle = FrameBGStyle.TILING
 
+
 class MsgBoxUI:
     def __init__(
         self,
         font: pygame.freetype.Font,
         frame_style: FrameStyle,
         width: int,
-        height: int):
+        height: int,
+    ):
         self.font = font
         self.frame_style = frame_style
         self.width = width
         self.height = height
-    
+
     def render(self) -> pygame.surface.Surface:
         pass

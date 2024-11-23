@@ -100,7 +100,7 @@ class GameWorld(ECS):
 
 @dataclass
 class Scene:
-    screen: pygame.surface.Surface
+    screen: Optional[pygame.surface.Surface] = None
     manager: Optional["SceneManager"] = None
 
     @staticmethod
@@ -135,17 +135,37 @@ class Scene:
 
 
 class SceneManager:
-    def __init__(self):
-        self.current_scene: Optional[str] = None
-        self.scenes: dict[str, Scene] = {}
+    def __init__(self, scenes: dict[str, Scene], screen: Optional[pygame.surface.Surface] = None):
+        self.screen = screen
+        self.__current_scene: Optional[str] = None
+        self.__scenes: dict[str, Scene] = {}
+        self.scenes = scenes
+    
+    @property
+    def scenes(self):
+        return self.__scenes
+    
+    @scenes.setter
+    def scenes(self, scenes: dict[str, Scene]):
+        for scene in scenes.values():
+            if scene.screen is None:
+                scene.screen = self.screen
+            scene.manager = self
+        print("this is scenes", self.__scenes)
+        self.__scenes = scenes
+
+    @property
+    def current_scene(self):
+        if self.__current_scene is None and len(self.scenes) > 0:
+            self.__current_scene = next(iter(self.scenes))
+            self.scenes[self.__current_scene].setup()
+        return self.__current_scene
 
     def add(self, scene: Scene, scene_name=str):
-        flag_to_setup = True if len(self.scenes) == 0 else False
+        if scene.screen is None:
+            scene.screen = self.screen
         scene.manager = self
         self.scenes[scene_name] = scene
-        if flag_to_setup:
-            self.current_scene = scene_name
-            self.scenes[self.current_scene].setup()
 
     def change_scene(
         self,
